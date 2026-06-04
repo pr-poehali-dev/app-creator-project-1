@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
+import ReportPage from "./ReportPage";
 
 function useLocalStorage<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
@@ -74,6 +75,9 @@ interface ReportData {
   responsible: string;
   secrecy: Secrecy;
 }
+
+export type { ReportData, Customer, Contractor, License, Contract, Secrecy };
+export { SECRECY_OPTIONS };
 
 const USE_TYPE_LABELS: Record<License["useType"], string> = {
   search_eval: "Поиски и оценка",
@@ -648,6 +652,7 @@ function ReportsSection({
   contractors,
   licenses,
   contracts,
+  onOpen,
 }: {
   reports: ReportData[];
   setReports: React.Dispatch<React.SetStateAction<ReportData[]>>;
@@ -655,6 +660,7 @@ function ReportsSection({
   contractors: Contractor[];
   licenses: License[];
   contracts: Contract[];
+  onOpen: (id: string) => void;
 }) {
   const emptyForm: Omit<ReportData, "id"> = {
     title: "",
@@ -745,13 +751,22 @@ function ReportsSection({
                   <FieldGroup label="Ответственный исполнитель" value={r.responsible} />
                 </div>
               </div>
-              <div className="flex gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEdit(r)} className="p-1.5 text-muted-foreground hover:text-geo-amber transition-colors">
-                  <Icon name="Pencil" size={14} />
+              <div className="flex flex-col gap-2 ml-4">
+                <button
+                  onClick={() => onOpen(r.id)}
+                  className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors"
+                >
+                  <Icon name="FolderOpen" size={12} />
+                  Открыть
                 </button>
-                <button onClick={() => setDeleteId(r.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
-                  <Icon name="Trash2" size={14} />
-                </button>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => openEdit(r)} className="p-1.5 text-muted-foreground hover:text-geo-amber transition-colors">
+                    <Icon name="Pencil" size={14} />
+                  </button>
+                  <button onClick={() => setDeleteId(r.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
+                    <Icon name="Trash2" size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -876,11 +891,27 @@ const SOON_ITEMS: { icon: string; label: string }[] = [
 
 export default function Index() {
   const [section, setSection] = useState<Section>("reports");
+  const [openReportId, setOpenReportId] = useState<string | null>(null);
   const [customers, setCustomers] = useLocalStorage<Customer[]>("geo_customers", INIT_CUSTOMERS);
   const [contractors, setContractors] = useLocalStorage<Contractor[]>("geo_contractors", INIT_CONTRACTORS);
   const [licenses, setLicenses] = useLocalStorage<License[]>("geo_licenses", INIT_LICENSES);
   const [contracts, setContracts] = useLocalStorage<Contract[]>("geo_contracts", INIT_CONTRACTS);
   const [reports, setReports] = useLocalStorage<ReportData[]>("geo_reports", INIT_REPORTS);
+
+  const openReport = reports.find((r) => r.id === openReportId);
+
+  if (openReport) {
+    return (
+      <ReportPage
+        report={openReport}
+        customers={customers}
+        contractors={contractors}
+        licenses={licenses}
+        contracts={contracts}
+        onBack={() => setOpenReportId(null)}
+      />
+    );
+  }
 
   const counts: Record<Section, number> = {
     reports: reports.length,
@@ -972,7 +1003,7 @@ export default function Index() {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-6 py-8 pt-20 md:pt-8">
-            {section === "reports" && <ReportsSection reports={reports} setReports={setReports} customers={customers} contractors={contractors} licenses={licenses} contracts={contracts} />}
+            {section === "reports" && <ReportsSection reports={reports} setReports={setReports} customers={customers} contractors={contractors} licenses={licenses} contracts={contracts} onOpen={setOpenReportId} />}
             {section === "customers" && <CustomersSection customers={customers} setCustomers={setCustomers} />}
             {section === "contractors" && <ContractorsSection contractors={contractors} setContractors={setContractors} />}
             {section === "licenses" && <LicensesSection licenses={licenses} setLicenses={setLicenses} customers={customers} />}
