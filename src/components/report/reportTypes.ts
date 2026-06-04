@@ -169,3 +169,13 @@ export interface ContentsEntry {
 }
 
 export const UPLOAD_URL = "https://functions.poehali.dev/99a0258c-48d9-44f9-889c-adeaad6c8527";
+
+export interface Illustration {
+  id: string;
+  number: number;
+  title: string;
+  url: string;
+  filename: string;
+  textPage: string;
+  uploadedAt: string;
+}
