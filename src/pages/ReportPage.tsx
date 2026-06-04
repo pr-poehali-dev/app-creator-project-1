@@ -177,6 +177,88 @@ function LabelSection({
         <span className="font-mono text-xs text-geo-amber/80">Поля загружаются из общих данных · серые поля доступны для редактирования</span>
       </div>
 
+      {/* Visual preview — GOST label layout */}
+      <div className="border border-border bg-card text-foreground font-body text-sm relative">
+        {/* Secrecy — top right */}
+        <div className="absolute top-4 right-5 text-right">
+          <p className={`font-mono text-base font-bold border px-2 py-0.5 ${secrecyColor[report.secrecy] || "text-foreground border-border"}`}>
+            {report.secrecy}
+          </p>
+          <p className="font-mono text-xs text-muted-foreground mt-1">
+            Экз. № <span className="border-b border-foreground/40 pl-1 pr-6">{labelData.copyNumber}</span>
+          </p>
+        </div>
+
+        <div className="p-8 space-y-4 pr-40">
+          {/* Customer */}
+          <div className="border-b border-foreground/20 pb-3">
+            <p className="text-xs text-muted-foreground font-mono mb-0.5">Министерство; агентство; компания и др.</p>
+            <p className="font-semibold uppercase leading-snug">
+              {customer?.name || <span className="italic text-muted-foreground">ЗАКАЗЧИК РАБОТ</span>}
+            </p>
+          </div>
+
+          {/* Contractor */}
+          <div className="border-b border-foreground/20 pb-3">
+            <p className="text-xs text-muted-foreground font-mono mb-0.5">Министерство; агентство; компания и др.</p>
+            <p className="uppercase italic leading-snug">
+              {contractor?.name || <span className="text-muted-foreground">ПОДРЯДЧИК–ИСПОЛНИТЕЛЬ РАБОТ</span>}
+            </p>
+          </div>
+
+          {/* Responsible */}
+          <div className="text-right pr-2">
+            <p className="text-xs text-muted-foreground">
+              Отв. исполнитель:{" "}
+              <span className="text-foreground font-medium">
+                {labelData.responsibleOverride || contractor?.responsible || report.responsible || "ФАМИЛИЯ И.О."}
+              </span>
+            </p>
+          </div>
+
+          {/* Report title */}
+          <div className="text-center py-2">
+            <p className="font-bold uppercase text-base leading-snug tracking-wide">
+              {report.title || <span className="text-muted-foreground italic">НАИМЕНОВАНИЕ ОТЧЁТА</span>}
+            </p>
+          </div>
+
+          {/* License / contract */}
+          <div className="text-center space-y-1">
+            <p className="text-sm">
+              {license
+                ? <>Номер лицензии на пользование недрами: <span className="font-semibold">{license.number}</span></>
+                : contract
+                ? <>Гос. контракт № <span className="font-semibold">{contract.number}</span></>
+                : <span className="text-muted-foreground italic">Номер лицензии / гос. контракта</span>
+              }
+            </p>
+          </div>
+
+          {/* Books / folders count */}
+          <div className="text-center text-sm text-muted-foreground">
+            Общее количество книг и папок в отчёте:{" "}
+            <span className="text-foreground font-medium">{labelData.totalBooks}</span> кн. /{" "}
+            <span className="text-foreground font-medium">{labelData.totalFolders}</span> папок
+          </div>
+
+          {/* Book number and name */}
+          <div className="text-center space-y-1">
+            <p className="font-semibold text-base">
+              Книга (папка) № {labelData.bookNumber}
+              {labelData.bookName ? ` — ${labelData.bookName}` : ""}
+            </p>
+          </div>
+
+          {/* Place + year */}
+          <div className="text-center pt-2 border-t border-foreground/10">
+            <p className="font-bold text-sm">
+              {report.place || "Место выпуска отчёта"}, {report.year || "Год"}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Table */}
       <div className="border border-border overflow-hidden">
         <div className="bg-muted/50 border-b border-border px-4 py-2 flex items-center justify-between">
