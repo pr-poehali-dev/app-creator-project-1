@@ -921,7 +921,7 @@ const EMPTY_METHOD: Omit<WorkMethod, "id"> = {
   note: "",
 };
 
-const COORD_SYSTEMS = ["—", "СК-42", "СК-63", "СК-95", "ПЗ-90", "WGS-84", "МСК"];
+const COORD_SYSTEMS = ["ГСК-2011"];
 
 function MethodsTable({ methods, onChange }: {
   methods: WorkMethod[];
