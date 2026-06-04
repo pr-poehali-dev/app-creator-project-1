@@ -180,6 +180,26 @@ export interface Illustration {
   uploadedAt: string;
 }
 
+export interface TextAppendix {
+  id: string;
+  number: number;
+  title: string;
+  textPage: string;
+  fileUrl?: string;
+  filename?: string;
+  uploadedAt?: string;
+}
+
+export interface GraphicAppendix {
+  id: string;
+  number: number;
+  title: string;
+  scale: string;
+  fileUrl?: string;
+  filename?: string;
+  uploadedAt?: string;
+}
+
 export interface TableEntry {
   id: string;
   number: number;

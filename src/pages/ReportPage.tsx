@@ -7,6 +7,8 @@ import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } fr
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
 import { IllustrationsSection } from "@/components/report/IllustrationsSection";
 import { TablesSection } from "@/components/report/TablesSection";
+import { TextAppendicesSection } from "@/components/report/TextAppendicesSection";
+import { GraphicAppendicesSection } from "@/components/report/GraphicAppendicesSection";
 
 // ─── ReportPage component ─────────────────────────────────────────────────────
 
@@ -213,6 +215,10 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 <IllustrationsSection reportId={report.id} />
               ) : activeTab === "tables" ? (
                 <TablesSection reportId={report.id} />
+              ) : activeTab === "text_appendices" ? (
+                <TextAppendicesSection reportId={report.id} />
+              ) : activeTab === "graphic_appendices" ? (
+                <GraphicAppendicesSection reportId={report.id} />
               ) : activeTab === "task_copy" ? (
                 <TaskCopySection reportId={report.id} />
               ) : activeTab === "contents" ? (
