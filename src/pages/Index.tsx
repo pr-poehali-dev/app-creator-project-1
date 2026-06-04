@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import ReportPage from "./ReportPage";
+import type { Customer, Contractor, Executor, License, Contract, CoContractor, ReportData, Secrecy } from "@/types/geo";
+import { SECRECY_OPTIONS } from "@/types/geo";
 
 function useLocalStorage<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
@@ -19,68 +21,7 @@ function useLocalStorage<T>(key: string, initial: T) {
   return [value, setValue] as const;
 }
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface Customer {
-  id: string;
-  name: string;
-  director: string;
-  inn: string;
-  address: string;
-}
-
-interface Contractor {
-  id: string;
-  name: string;
-  director: string;
-  chiefGeologist: string;
-  responsible: string;
-}
-
-interface License {
-  id: string;
-  number: string;
-  issueDate: string;
-  ownerId: string;
-  siteName: string;
-  useType: "search_eval" | "exploration_mining";
-}
-
-interface Contract {
-  id: string;
-  number: string;
-  date: string;
-  name: string;
-}
-
 type Section = "customers" | "contractors" | "licenses" | "contracts" | "reports";
-
-type Secrecy = "нс" | "КТ" | "С" | "СС" | "ОВ";
-
-const SECRECY_OPTIONS: { value: Secrecy; label: string; desc: string }[] = [
-  { value: "нс", label: "нс", desc: "Не секретно" },
-  { value: "КТ", label: "КТ", desc: "Коммерческая тайна" },
-  { value: "С", label: "С", desc: "Секретно" },
-  { value: "СС", label: "СС", desc: "Совершенно секретно" },
-  { value: "ОВ", label: "ОВ", desc: "Особой важности" },
-];
-
-interface ReportData {
-  id: string;
-  title: string;
-  customerId: string;
-  contractorId: string;
-  licenseId: string;
-  contractId: string;
-  responsible: string;
-  secrecy: Secrecy;
-  place: string;
-  year: string;
-  govRegNumber: string;
-}
-
-export type { ReportData, Customer, Contractor, License, Contract, Secrecy };
-export { SECRECY_OPTIONS };
 
 const USE_TYPE_LABELS: Record<License["useType"], string> = {
   search_eval: "Поиски и оценка",
@@ -106,6 +47,7 @@ const INIT_CONTRACTORS: Contractor[] = [
     director: "Сидоров Виктор Павлович",
     chiefGeologist: "Кузнецов Дмитрий Иванович",
     responsible: "Иванов Сергей Михайлович",
+    executors: [],
   },
 ];
 
@@ -345,6 +287,99 @@ function CustomersSection({
 
 // ─── Contractors Section ──────────────────────────────────────────────────────
 
+function ExecutorsList({ contractor, setContractors }: {
+  contractor: Contractor;
+  setContractors: React.Dispatch<React.SetStateAction<Contractor[]>>;
+}) {
+  const emptyExec: Omit<Executor, "id"> = { lastName: "", initials: "", position: "", degree: "" };
+  const [execModal, setExecModal] = useState<null | "add" | Executor>(null);
+  const [execForm, setExecForm] = useState<Omit<Executor, "id">>(emptyExec);
+  const [deleteExecId, setDeleteExecId] = useState<string | null>(null);
+
+  const patchExecutors = (execs: Executor[]) => {
+    setContractors((prev) => prev.map((c) => c.id === contractor.id ? { ...c, executors: execs } : c));
+  };
+
+  const openAddExec = () => { setExecForm(emptyExec); setExecModal("add"); };
+  const openEditExec = (e: Executor) => { setExecForm({ lastName: e.lastName, initials: e.initials, position: e.position, degree: e.degree }); setExecModal(e); };
+
+  const saveExec = () => {
+    if (execModal === "add") {
+      patchExecutors([...(contractor.executors || []), { ...execForm, id: Date.now().toString() }]);
+    } else if (execModal && typeof execModal === "object") {
+      patchExecutors((contractor.executors || []).map((e) => e.id === (execModal as Executor).id ? { ...(execModal as Executor), ...execForm } : e));
+    }
+    setExecModal(null);
+  };
+
+  const removeExec = (id: string) => {
+    patchExecutors((contractor.executors || []).filter((e) => e.id !== id));
+    setDeleteExecId(null);
+  };
+
+  const executors = contractor.executors || [];
+
+  return (
+    <div className="mt-3 border-t border-border/50 pt-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Исполнители · {executors.length}</span>
+        <button onClick={openAddExec} className="flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors">
+          <Icon name="Plus" size={12} /> Добавить исполнителя
+        </button>
+      </div>
+      {executors.length === 0 ? (
+        <p className="text-xs text-muted-foreground/50 font-mono italic">Нет исполнителей</p>
+      ) : (
+        <div className="space-y-1.5">
+          {executors.map((e) => (
+            <div key={e.id} className="flex items-center justify-between bg-muted/30 px-3 py-2 group">
+              <div className="flex items-start gap-4 flex-1">
+                <span className="text-sm font-medium text-foreground min-w-[140px]">
+                  {e.lastName}{e.initials ? ` ${e.initials}` : ""}
+                </span>
+                <span className="text-xs text-muted-foreground">{e.position}{e.degree ? ` · ${e.degree}` : ""}</span>
+              </div>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => openEditExec(e)} className="p-1 text-muted-foreground hover:text-geo-amber transition-colors">
+                  <Icon name="Pencil" size={12} />
+                </button>
+                <button onClick={() => setDeleteExecId(e.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                  <Icon name="Trash2" size={12} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {execModal && (
+        <Modal title={execModal === "add" ? "Новый исполнитель" : "Редактировать исполнителя"} onClose={() => setExecModal(null)}>
+          <div className="grid grid-cols-2 gap-3">
+            <GeoInput label="Фамилия" value={execForm.lastName} onChange={(v) => setExecForm((f) => ({ ...f, lastName: v }))} placeholder="Яковлев" />
+            <GeoInput label="Инициалы" value={execForm.initials} onChange={(v) => setExecForm((f) => ({ ...f, initials: v }))} placeholder="Н.М." />
+          </div>
+          <GeoInput label="Должность" value={execForm.position} onChange={(v) => setExecForm((f) => ({ ...f, position: v }))} placeholder="ответ. исп., вед. геолог" />
+          <GeoInput label="Учёная степень / звание" value={execForm.degree} onChange={(v) => setExecForm((f) => ({ ...f, degree: v }))} placeholder="канд. геол.-мин. наук" />
+          <div className="flex gap-3 pt-2">
+            <button onClick={saveExec} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">Сохранить</button>
+            <button onClick={() => setExecModal(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
+          </div>
+        </Modal>
+      )}
+
+      {deleteExecId && (
+        <Modal title="Удалить исполнителя?" onClose={() => setDeleteExecId(null)}>
+          <p className="text-sm text-muted-foreground">Исполнитель будет удалён из списка.</p>
+          <div className="flex gap-3 pt-2">
+            <button onClick={() => removeExec(deleteExecId)} className="flex-1 bg-destructive text-destructive-foreground py-2 text-sm font-display tracking-wider uppercase hover:opacity-90 transition-opacity">Удалить</button>
+            <button onClick={() => setDeleteExecId(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
 function ContractorsSection({
   contractors,
   setContractors,
@@ -353,16 +388,16 @@ function ContractorsSection({
   setContractors: React.Dispatch<React.SetStateAction<Contractor[]>>;
 }) {
   const [modal, setModal] = useState<null | "add" | Contractor>(null);
-  const [form, setForm] = useState<Omit<Contractor, "id">>({ name: "", director: "", chiefGeologist: "", responsible: "" });
+  const [form, setForm] = useState<Omit<Contractor, "id">>({ name: "", director: "", chiefGeologist: "", responsible: "", executors: [] });
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const openAdd = () => {
-    setForm({ name: "", director: "", chiefGeologist: "", responsible: "" });
+    setForm({ name: "", director: "", chiefGeologist: "", responsible: "", executors: [] });
     setModal("add");
   };
 
   const openEdit = (c: Contractor) => {
-    setForm({ name: c.name, director: c.director, chiefGeologist: c.chiefGeologist, responsible: c.responsible });
+    setForm({ name: c.name, director: c.director, chiefGeologist: c.chiefGeologist, responsible: c.responsible, executors: c.executors || [] });
     setModal(c);
   };
 
@@ -405,6 +440,7 @@ function ContractorsSection({
                 </button>
               </div>
             </div>
+            <ExecutorsList contractor={c} setContractors={setContractors} />
           </div>
         ))}
       </div>
@@ -676,6 +712,7 @@ function ReportsSection({
     place: "",
     year: new Date().getFullYear().toString(),
     govRegNumber: "",
+    coContractors: [],
   };
 
   const [modal, setModal] = useState<null | "add" | ReportData>(null);
@@ -922,6 +959,7 @@ export default function Index() {
         licenses={licenses}
         contracts={contracts}
         onBack={() => setOpenReportId(null)}
+        onUpdateReport={(r) => setReports((prev) => prev.map((x) => x.id === r.id ? r : x))}
       />
     );
   }
