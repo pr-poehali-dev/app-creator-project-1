@@ -76,6 +76,7 @@ interface ReportData {
   secrecy: Secrecy;
   place: string;
   year: string;
+  govRegNumber: string;
 }
 
 export type { ReportData, Customer, Contractor, License, Contract, Secrecy };
@@ -674,6 +675,7 @@ function ReportsSection({
     secrecy: "нс",
     place: "",
     year: new Date().getFullYear().toString(),
+    govRegNumber: "",
   };
 
   const [modal, setModal] = useState<null | "add" | ReportData>(null);
@@ -854,6 +856,8 @@ function ReportsSection({
               {SECRECY_OPTIONS.find((o) => o.value === form.secrecy)?.desc}
             </p>
           </div>
+
+          <GeoInput label="Номер государственной регистрации работы" value={form.govRegNumber} onChange={(v) => setForm((f) => ({ ...f, govRegNumber: v }))} placeholder="№ ГР ..." />
 
           <div className="grid grid-cols-2 gap-3">
             <GeoInput label="Место выпуска отчёта" value={form.place} onChange={(v) => setForm((f) => ({ ...f, place: v }))} placeholder="Москва" />
