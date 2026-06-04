@@ -185,4 +185,8 @@ export interface TableEntry {
   number: number;
   title: string;
   textPage: string;
+  fileUrl?: string;
+  filename?: string;
+  fileType?: "xlsx" | "pdf" | "other";
+  uploadedAt?: string;
 }
