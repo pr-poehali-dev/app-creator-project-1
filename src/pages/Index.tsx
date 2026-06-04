@@ -1,5 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
+
+function useLocalStorage<T>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? (JSON.parse(stored) as T) : initial;
+    } catch {
+      return initial;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -618,10 +635,10 @@ const SOON_ITEMS: { icon: string; label: string }[] = [
 
 export default function Index() {
   const [section, setSection] = useState<Section>("customers");
-  const [customers, setCustomers] = useState<Customer[]>(INIT_CUSTOMERS);
-  const [contractors, setContractors] = useState<Contractor[]>(INIT_CONTRACTORS);
-  const [licenses, setLicenses] = useState<License[]>(INIT_LICENSES);
-  const [contracts, setContracts] = useState<Contract[]>(INIT_CONTRACTS);
+  const [customers, setCustomers] = useLocalStorage<Customer[]>("geo_customers", INIT_CUSTOMERS);
+  const [contractors, setContractors] = useLocalStorage<Contractor[]>("geo_contractors", INIT_CONTRACTORS);
+  const [licenses, setLicenses] = useLocalStorage<License[]>("geo_licenses", INIT_LICENSES);
+  const [contracts, setContracts] = useLocalStorage<Contract[]>("geo_contracts", INIT_CONTRACTS);
 
   const counts: Record<Section, number> = {
     customers: customers.length,
