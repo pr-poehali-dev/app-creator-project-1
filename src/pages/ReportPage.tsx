@@ -6,6 +6,7 @@ import type { TabId, LabelData, TitlePageData, AbstractData } from "@/components
 import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } from "@/components/report/ReportSections1";
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
 import { IllustrationsSection } from "@/components/report/IllustrationsSection";
+import { TablesSection } from "@/components/report/TablesSection";
 
 // ─── ReportPage component ─────────────────────────────────────────────────────
 
@@ -210,6 +211,8 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 />
               ) : activeTab === "illustrations" ? (
                 <IllustrationsSection reportId={report.id} />
+              ) : activeTab === "tables" ? (
+                <TablesSection reportId={report.id} />
               ) : activeTab === "task_copy" ? (
                 <TaskCopySection reportId={report.id} />
               ) : activeTab === "contents" ? (

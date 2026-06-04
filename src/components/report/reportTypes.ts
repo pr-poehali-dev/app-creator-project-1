@@ -179,3 +179,10 @@ export interface Illustration {
   textPage: string;
   uploadedAt: string;
 }
+
+export interface TableEntry {
+  id: string;
+  number: number;
+  title: string;
+  textPage: string;
+}
