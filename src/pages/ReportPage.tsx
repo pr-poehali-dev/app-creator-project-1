@@ -832,7 +832,6 @@ interface WorkMethod {
   coordSystem: string;
   coordFrom: string;
   coordTo: string;
-  note: string;
 }
 
 interface AbstractData {
@@ -918,7 +917,6 @@ const EMPTY_METHOD: Omit<WorkMethod, "id"> = {
   coordSystem: "",
   coordFrom: "",
   coordTo: "",
-  note: "",
 };
 
 const COORD_SYSTEMS = ["ГСК-2011"];
@@ -982,7 +980,6 @@ function MethodsTable({ methods, onChange }: {
                 <tr key={m.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors group">
                   <td className="px-3 py-2.5">
                     <p className="text-sm text-foreground font-medium leading-snug">{m.name || "—"}</p>
-                    {m.note && <p className="text-xs text-muted-foreground mt-0.5">{m.note}</p>}
                   </td>
                   <td className="px-3 py-2.5 font-mono text-sm">{m.volume || "—"}</td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">{m.unit || "—"}</td>
@@ -1096,17 +1093,6 @@ function MethodsTable({ methods, onChange }: {
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Примечание</label>
-              <input
-                type="text"
-                value={form.note}
-                onChange={(e) => setF("note")(e.target.value)}
-                placeholder="доп. сведения..."
-                className="w-full bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-geo-amber transition-colors"
-              />
             </div>
 
             <div className="flex gap-3 pt-1">
