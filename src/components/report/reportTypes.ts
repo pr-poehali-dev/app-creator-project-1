@@ -200,6 +200,12 @@ export interface GraphicAppendix {
   uploadedAt?: string;
 }
 
+export interface TermEntry {
+  id: string;
+  term: string;
+  definition: string;
+}
+
 export interface TableEntry {
   id: string;
   number: number;
