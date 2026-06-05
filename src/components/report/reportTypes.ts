@@ -200,6 +200,31 @@ export interface GraphicAppendix {
   uploadedAt?: string;
 }
 
+// ─── Intro (Введение) ─────────────────────────────────────────────────────────
+
+export type IntroBlockType = "text" | "section" | "image";
+
+export interface IntroImage {
+  id: string;
+  url: string;
+  filename: string;
+  caption: string;
+  uploadedAt: string;
+}
+
+export interface IntroBlock {
+  id: string;
+  type: IntroBlockType;
+  /** type=text|section: текст параграфа */
+  content?: string;
+  /** type=section: заголовок раздела */
+  sectionTitle?: string;
+  /** type=section: уровень (1 = раздел, 2 = подраздел) */
+  level?: 1 | 2;
+  /** type=image */
+  image?: IntroImage;
+}
+
 export interface TermEntry {
   id: string;
   term: string;

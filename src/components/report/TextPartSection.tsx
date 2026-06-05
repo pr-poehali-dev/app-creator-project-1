@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import { IntroSection } from "./IntroSection";
 
 type SubTab = "intro" | "main" | "conclusion";
 
@@ -72,19 +73,25 @@ export function TextPartSection({ reportId }: TextPartSectionProps) {
         })}
       </div>
 
-      {/* Sub-tab content placeholder */}
-      <div className="border border-dashed border-border/60 rounded-sm py-20 flex flex-col items-center gap-4 text-center px-8">
-        <div className="w-12 h-12 border border-geo-amber/30 bg-geo-amber/5 flex items-center justify-center">
-          <Icon name={active.icon} fallback="FileText" size={22} className="text-geo-amber/60" />
-        </div>
-        <div className="space-y-1.5 max-w-md">
-          <p className="font-display text-sm tracking-wider uppercase text-foreground/70">{active.label}</p>
-          <p className="font-mono text-xs text-muted-foreground/60 leading-relaxed">{active.description}</p>
-        </div>
-        <div className="flex items-center gap-2 mt-2 text-xs font-mono text-muted-foreground/40 border border-border/40 px-3 py-1.5">
-          <Icon name="Clock" size={11} />
-          Раздел будет реализован отдельно
-        </div>
+      {/* Sub-tab content */}
+      <div>
+        {activeSubTab === "intro" ? (
+          <IntroSection reportId={reportId} />
+        ) : (
+          <div className="border border-dashed border-border/60 py-20 flex flex-col items-center gap-4 text-center px-8">
+            <div className="w-12 h-12 border border-geo-amber/30 bg-geo-amber/5 flex items-center justify-center">
+              <Icon name={active.icon} fallback="FileText" size={22} className="text-geo-amber/60" />
+            </div>
+            <div className="space-y-1.5 max-w-md">
+              <p className="font-display text-sm tracking-wider uppercase text-foreground/70">{active.label}</p>
+              <p className="font-mono text-xs text-muted-foreground/60 leading-relaxed">{active.description}</p>
+            </div>
+            <div className="flex items-center gap-2 mt-2 text-xs font-mono text-muted-foreground/40 border border-border/40 px-3 py-1.5">
+              <Icon name="Clock" size={11} />
+              Раздел будет реализован отдельно
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
