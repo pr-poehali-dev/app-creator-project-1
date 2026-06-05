@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { IntroSection } from "./IntroSection";
 import { MainTextSection } from "./MainSection";
+import { ConclusionSection } from "./ConclusionSection";
 
 type SubTab = "intro" | "main" | "conclusion";
 
@@ -35,7 +36,6 @@ interface TextPartSectionProps {
 
 export function TextPartSection({ reportId }: TextPartSectionProps) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("intro");
-  const active = SUB_TABS.find((t) => t.id === activeSubTab)!;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -81,19 +81,7 @@ export function TextPartSection({ reportId }: TextPartSectionProps) {
         ) : activeSubTab === "main" ? (
           <MainTextSection reportId={reportId} />
         ) : (
-          <div className="border border-dashed border-border/60 py-20 flex flex-col items-center gap-4 text-center px-8">
-            <div className="w-12 h-12 border border-geo-amber/30 bg-geo-amber/5 flex items-center justify-center">
-              <Icon name={active.icon} fallback="FileText" size={22} className="text-geo-amber/60" />
-            </div>
-            <div className="space-y-1.5 max-w-md">
-              <p className="font-display text-sm tracking-wider uppercase text-foreground/70">{active.label}</p>
-              <p className="font-mono text-xs text-muted-foreground/60 leading-relaxed">{active.description}</p>
-            </div>
-            <div className="flex items-center gap-2 mt-2 text-xs font-mono text-muted-foreground/40 border border-border/40 px-3 py-1.5">
-              <Icon name="Clock" size={11} />
-              Раздел будет реализован отдельно
-            </div>
-          </div>
+          <ConclusionSection reportId={reportId} />
         )}
       </div>
     </div>
