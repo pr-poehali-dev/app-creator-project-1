@@ -240,7 +240,7 @@ function AppendixRefEl({ block, onDelete, ...actions }: { block: MainBlock; onDe
 
 // ─── SectionCard ──────────────────────────────────────────────────────────────
 
-function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast, reportId, sectionIndex }: {
+function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast, reportId, sectionNum }: {
   section: MainSection;
   onChange: (s: MainSection) => void;
   onDelete: () => void;
@@ -249,7 +249,7 @@ function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirs
   isFirst: boolean;
   isLast: boolean;
   reportId: string;
-  sectionIndex: number;
+  sectionNum: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [pickerBlockId, setPickerBlockId] = useState<string | null>(null);
@@ -274,15 +274,13 @@ function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirs
     setPickerBlockId(null);
   };
 
-  const levelLabel = section.level === 1
-    ? `${sectionIndex + 1}`
-    : `${sectionIndex + 1}.x`;
+  const levelLabel = sectionNum;
 
   return (
     <div className={`border ${section.level === 1 ? "border-border" : "border-border/50 ml-6"} bg-card`}>
       {/* Section header */}
-      <div className={`flex items-center gap-3 px-4 py-3 ${section.level === 1 ? "bg-muted/30" : "bg-muted/10"} border-b border-border/50`}>
-        <span className="font-mono text-xs text-geo-amber/60 flex-shrink-0">{levelLabel}</span>
+      <div className={`flex items-center gap-3 px-4 py-3 ${section.level === 1 ? "bg-muted/30 border-l-2 border-l-geo-amber/60" : "bg-muted/10 border-l-2 border-l-geo-amber/20"} border-b border-border/50`}>
+        <span className={`font-mono flex-shrink-0 font-semibold ${section.level === 1 ? "text-sm text-geo-amber" : "text-xs text-geo-amber/60"}`}>{levelLabel}</span>
         <input
           type="text"
           value={section.title}
@@ -364,9 +362,20 @@ export function MainTextSection({ reportId }: { reportId: string }) {
     update(next);
   };
 
-  const sectionCounters = (() => {
-    let i = 0;
-    return sections.map((s) => { if (s.level === 1) i++; return i - (s.level === 2 ? 0 : 0); });
+  // Нумерация: разделы начиная с 2 (Введение = 1), подразделы X.1, X.2...
+  const sectionNumbers = (() => {
+    let sectionNum = 1; // старт с 2 после Введения
+    let subNum = 0;
+    return sections.map((s) => {
+      if (s.level === 1) {
+        sectionNum++;
+        subNum = 0;
+        return `${sectionNum}`;
+      } else {
+        subNum++;
+        return `${sectionNum}.${subNum}`;
+      }
+    });
   })();
 
   return (
@@ -410,7 +419,7 @@ export function MainTextSection({ reportId }: { reportId: string }) {
               isFirst={idx === 0}
               isLast={idx === sections.length - 1}
               reportId={reportId}
-              sectionIndex={sectionCounters[idx] - 1}
+              sectionNum={sectionNumbers[idx]}
             />
           ))}
 

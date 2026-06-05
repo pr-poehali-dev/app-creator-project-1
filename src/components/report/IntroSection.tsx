@@ -7,10 +7,24 @@ import { UPLOAD_URL } from "./reportTypes";
 
 function newId() { return Date.now().toString() + Math.random().toString(36).slice(2, 6); }
 
+/** Вычисляет номер для каждого блока типа "section" внутри Введения (раздел 1).
+ *  Возвращает Map<blockId, "1.1"> */
+function computeIntroNumbers(blocks: IntroBlock[]): Map<string, string> {
+  const map = new Map<string, string>();
+  let sub = 0;
+  for (const b of blocks) {
+    if (b.type !== "section") continue;
+    sub++;
+    map.set(b.id, `1.${sub}`);
+  }
+  return map;
+}
+
 // ─── sub-components ───────────────────────────────────────────────────────────
 
-function SectionHeading({ block, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast }: {
+function SectionHeading({ block, sectionNum, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast }: {
   block: IntroBlock;
+  sectionNum: string;
   onChange: (b: IntroBlock) => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -20,21 +34,14 @@ function SectionHeading({ block, onChange, onDelete, onMoveUp, onMoveDown, isFir
 }) {
   return (
     <div className="group flex items-start gap-2">
-      <div className="flex-1 flex items-center gap-2">
-        <select
-          value={block.level ?? 1}
-          onChange={(e) => onChange({ ...block, level: Number(e.target.value) as 1 | 2 })}
-          className="bg-muted border border-border text-xs font-mono text-muted-foreground px-1.5 py-1 focus:outline-none focus:border-geo-amber transition-colors w-28 flex-shrink-0"
-        >
-          <option value={1}>Раздел</option>
-          <option value={2}>Подраздел</option>
-        </select>
+      <div className="flex-1 flex items-center gap-2 border-l-2 border-geo-amber/30 pl-3 py-1">
+        <span className="font-mono text-sm text-geo-amber font-semibold flex-shrink-0 min-w-[2.5rem]">{sectionNum}</span>
         <input
           type="text"
           value={block.sectionTitle ?? ""}
           onChange={(e) => onChange({ ...block, sectionTitle: e.target.value })}
-          placeholder={block.level === 2 ? "Название подраздела..." : "Название раздела..."}
-          className={`flex-1 bg-transparent border-b border-border focus:border-geo-amber outline-none py-1 transition-colors placeholder:text-muted-foreground/40 text-foreground font-display tracking-wide ${block.level === 2 ? "text-sm pl-4" : "text-base"}`}
+          placeholder="Название подраздела..."
+          className="flex-1 bg-transparent border-b border-border focus:border-geo-amber outline-none py-1 transition-colors placeholder:text-muted-foreground/40 text-foreground font-display tracking-wide text-sm"
         />
       </div>
       <BlockActions isFirst={isFirst} isLast={isLast} onMoveUp={onMoveUp} onMoveDown={onMoveDown} onDelete={onDelete} />
@@ -258,17 +265,21 @@ export function IntroSection({ reportId }: { reportId: string }) {
     update(next);
   };
 
+  // Нумерация: Введение = 1, подразделы = 1.1, 1.2 ...
+  const introNum = computeIntroNumbers(blocks);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">
           <Icon name="BookOpenCheck" size={13} className="text-geo-amber/60" />
+          <span className="text-geo-amber font-semibold">1.</span>
           Введение
-          {blocks.length > 0 && <span className="text-geo-amber">{String(blocks.length).padStart(2, "0")} блоков</span>}
+          {blocks.length > 0 && <span className="text-muted-foreground/40">{String(blocks.filter(b => b.type === "section").length)} подразд.</span>}
         </div>
         {blocks.length === 0 && (
           <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground/40">
-            <Icon name="Info" size={12} /> Можно вести сплошным текстом или с разбивкой на разделы
+            <Icon name="Info" size={12} /> Сплошным текстом или с разбивкой на подразделы
           </div>
         )}
       </div>
@@ -307,7 +318,7 @@ export function IntroSection({ reportId }: { reportId: string }) {
               isFirst: idx === 0,
               isLast: idx === blocks.length - 1,
             };
-            if (block.type === "section") return <SectionHeading key={block.id} {...props} />;
+            if (block.type === "section") return <SectionHeading key={block.id} {...props} sectionNum={introNum.get(block.id) ?? "1.?"} />;
             if (block.type === "image") return <ImageBlock key={block.id} {...props} reportId={reportId} />;
             return <TextBlock key={block.id} {...props} />;
           })}
