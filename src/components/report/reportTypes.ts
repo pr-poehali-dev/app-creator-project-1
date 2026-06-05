@@ -262,6 +262,30 @@ export interface MainSection {
   blocks: MainBlock[];
 }
 
+// ─── References (Список использованных источников) ────────────────────────────
+
+/** published = опубликованная; unpublished = неопубликованная (фондовая) */
+export type ReferenceKind = "published" | "unpublished";
+
+export interface ReferenceEntry {
+  id: string;
+  kind: ReferenceKind;
+  /** Автор(ы): Фамилия И.О. через запятую */
+  authors: string;
+  /** Полное наименование работы */
+  title: string;
+  /** Для опубликованных: место издания, издательство, год, страницы */
+  publishInfo?: string;
+  /** Для неопубликованных: наименование организации-исполнителя и город */
+  organization?: string;
+  /** Год завершения / издания */
+  year?: string;
+  /** Наименование фонда геологической информации (для фондовых) */
+  fund?: string;
+  /** Инвентарный номер в фонде (для фондовых) */
+  inventoryNumber?: string;
+}
+
 export interface TermEntry {
   id: string;
   term: string;

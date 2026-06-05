@@ -11,6 +11,7 @@ import { TextAppendicesSection } from "@/components/report/TextAppendicesSection
 import { GraphicAppendicesSection } from "@/components/report/GraphicAppendicesSection";
 import { TermsSection } from "@/components/report/TermsSection";
 import { TextPartSection } from "@/components/report/TextPartSection";
+import { ReferencesSection } from "@/components/report/ReferencesSection";
 
 // ─── ReportPage component ─────────────────────────────────────────────────────
 
@@ -225,6 +226,8 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 <TermsSection reportId={report.id} />
               ) : activeTab === "text_part" ? (
                 <TextPartSection reportId={report.id} />
+              ) : activeTab === "references" ? (
+                <ReferencesSection reportId={report.id} />
               ) : activeTab === "task_copy" ? (
                 <TaskCopySection reportId={report.id} />
               ) : activeTab === "contents" ? (
