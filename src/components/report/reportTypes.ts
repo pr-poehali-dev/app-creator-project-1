@@ -225,6 +225,43 @@ export interface IntroBlock {
   image?: IntroImage;
 }
 
+// ─── Main text part ───────────────────────────────────────────────────────────
+
+export type MainBlockType = "text" | "image" | "table" | "appendix_ref";
+
+export type AppendixRefKind = "table" | "text_appendix" | "graphic_appendix";
+
+export interface AppendixRef {
+  kind: AppendixRefKind;
+  itemId: string;
+  label: string;
+}
+
+export interface MainImage {
+  id: string;
+  url: string;
+  filename: string;
+  caption: string;
+  uploadedAt: string;
+}
+
+export interface MainBlock {
+  id: string;
+  type: MainBlockType;
+  content?: string;
+  image?: MainImage;
+  tableCaption?: string;
+  tableContent?: string;
+  appendixRef?: AppendixRef;
+}
+
+export interface MainSection {
+  id: string;
+  level: 1 | 2;
+  title: string;
+  blocks: MainBlock[];
+}
+
 export interface TermEntry {
   id: string;
   term: string;

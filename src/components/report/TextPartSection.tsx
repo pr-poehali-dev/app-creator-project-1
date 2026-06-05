@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { IntroSection } from "./IntroSection";
+import { MainTextSection } from "./MainSection";
 
 type SubTab = "intro" | "main" | "conclusion";
 
@@ -77,6 +78,8 @@ export function TextPartSection({ reportId }: TextPartSectionProps) {
       <div>
         {activeSubTab === "intro" ? (
           <IntroSection reportId={reportId} />
+        ) : activeSubTab === "main" ? (
+          <MainTextSection reportId={reportId} />
         ) : (
           <div className="border border-dashed border-border/60 py-20 flex flex-col items-center gap-4 text-center px-8">
             <div className="w-12 h-12 border border-geo-amber/30 bg-geo-amber/5 flex items-center justify-center">
