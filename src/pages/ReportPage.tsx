@@ -15,6 +15,7 @@ import { ReferencesSection } from "@/components/report/ReferencesSection";
 import { MetrologicalSection } from "@/components/report/MetrologicalSection";
 import { PatentSection } from "@/components/report/PatentSection";
 import { ReviewSection } from "@/components/report/ReviewSection";
+import { ProtocolSection } from "@/components/report/ProtocolSection";
 
 // ─── ReportPage component ─────────────────────────────────────────────────────
 
@@ -237,6 +238,8 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 <PatentSection reportId={report.id} />
               ) : activeTab === "review" ? (
                 <ReviewSection reportId={report.id} />
+              ) : activeTab === "protocol" ? (
+                <ProtocolSection reportId={report.id} />
               ) : activeTab === "task_copy" ? (
                 <TaskCopySection reportId={report.id} />
               ) : activeTab === "contents" ? (
