@@ -19,6 +19,7 @@ import { ProtocolSection } from "@/components/report/ProtocolSection";
 import { CostSection } from "@/components/report/CostSection";
 import { TransferActsSection } from "@/components/report/TransferActsSection";
 import { TextAppFilesSection } from "@/components/report/TextAppFilesSection";
+import { GraphicAppFilesSection } from "@/components/report/GraphicAppFilesSection";
 
 // ─── ReportPage component ─────────────────────────────────────────────────────
 
@@ -249,6 +250,8 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 <TransferActsSection reportId={report.id} />
               ) : activeTab === "text_app_files" ? (
                 <TextAppFilesSection reportId={report.id} />
+              ) : activeTab === "graphic_app_files" ? (
+                <GraphicAppFilesSection reportId={report.id} />
               ) : activeTab === "task_copy" ? (
                 <TaskCopySection reportId={report.id} />
               ) : activeTab === "contents" ? (
