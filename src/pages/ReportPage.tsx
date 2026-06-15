@@ -233,7 +233,13 @@ export default function ReportPage({ report, customers, contractors, licenses, c
               ) : activeTab === "terms" ? (
                 <TermsSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "text_part" ? (
-                <TextPartSection reportId={report.id} />
+                <TextPartSection
+                  reportId={report.id}
+                  secrecy={report.secrecy}
+                  responsible={report.responsible}
+                  contractor={contractor}
+                  contractors={contractors}
+                />
               ) : activeTab === "references" ? (
                 <ReferencesSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "metrological" ? (

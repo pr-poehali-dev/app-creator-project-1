@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import type { Secrecy, Contractor } from "@/types/geo";
 import { IntroSection } from "./IntroSection";
 import { MainTextSection } from "./MainSection";
 import { ConclusionSection } from "./ConclusionSection";
+import { SectionMeta } from "./SectionMeta";
 
 type SubTab = "intro" | "main" | "conclusion";
 
@@ -32,9 +34,13 @@ const SUB_TABS: { id: SubTab; label: string; shortLabel: string; icon: string; d
 
 interface TextPartSectionProps {
   reportId: string;
+  secrecy: Secrecy;
+  responsible: string;
+  contractor?: Contractor;
+  contractors?: Contractor[];
 }
 
-export function TextPartSection({ reportId }: TextPartSectionProps) {
+export function TextPartSection({ reportId, secrecy, responsible, contractor, contractors = [] }: TextPartSectionProps) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("intro");
 
   return (
@@ -73,6 +79,22 @@ export function TextPartSection({ reportId }: TextPartSectionProps) {
           );
         })}
       </div>
+
+      {/* SectionMeta — per sub-tab */}
+      <SectionMeta
+        reportId={reportId}
+        tabId={
+          activeSubTab === "intro"
+            ? "text_part_intro"
+            : activeSubTab === "main"
+            ? "text_part_main"
+            : "text_part_conc"
+        }
+        secrecy={secrecy}
+        responsible={responsible}
+        contractor={contractor}
+        contractors={contractors}
+      />
 
       {/* Sub-tab content */}
       <div>
