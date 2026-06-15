@@ -2,8 +2,16 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { TextAppendix } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
+import { SectionMeta } from "./SectionMeta";
+import type { Secrecy, Contractor } from "@/types/geo";
 
-export function TextAppendicesSection({ reportId }: { reportId: string }) {
+export function TextAppendicesSection({ reportId, secrecy, responsible, contractor, contractors }: {
+  reportId: string;
+  secrecy: Secrecy;
+  responsible: string;
+  contractor?: Contractor;
+  contractors?: Contractor[];
+}) {
   const storageKey = `geo_text_appendices_${reportId}`;
 
   const load = (): TextAppendix[] => {
@@ -106,6 +114,15 @@ export function TextAppendicesSection({ reportId }: { reportId: string }) {
         </div>
         <p className="text-xs text-muted-foreground font-mono ml-7">ГОСТ Р 53579–2009 · структурный элемент 9 · при наличии</p>
       </div>
+
+      <SectionMeta
+        reportId={reportId}
+        tabId="text_appendices"
+        secrecy={secrecy}
+        responsible={responsible}
+        contractor={contractor}
+        contractors={contractors}
+      />
 
       <div className="border border-geo-amber/30 bg-geo-amber/5 px-4 py-3 flex items-center gap-3">
         <Icon name="Info" size={14} className="text-geo-amber" />

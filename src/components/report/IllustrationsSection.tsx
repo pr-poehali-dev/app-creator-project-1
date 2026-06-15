@@ -2,14 +2,20 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { Illustration } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
+import { SectionMeta } from "./SectionMeta";
+import type { Secrecy, Contractor } from "@/types/geo";
 
 // ─── IllustrationsSection ─────────────────────────────────────────────────────
 
 interface IllustrationsSectionProps {
   reportId: string;
+  secrecy: Secrecy;
+  responsible: string;
+  contractor?: Contractor;
+  contractors?: Contractor[];
 }
 
-export function IllustrationsSection({ reportId }: IllustrationsSectionProps) {
+export function IllustrationsSection({ reportId, secrecy, responsible, contractor, contractors }: IllustrationsSectionProps) {
   const storageKey = `geo_illustrations_${reportId}`;
 
   const load = (): Illustration[] => {
@@ -124,6 +130,15 @@ export function IllustrationsSection({ reportId }: IllustrationsSectionProps) {
         </div>
         <p className="text-xs text-muted-foreground font-mono ml-7">ГОСТ Р 53579–2009 · структурный элемент 7 · при наличии</p>
       </div>
+
+      <SectionMeta
+        reportId={reportId}
+        tabId="illustrations"
+        secrecy={secrecy}
+        responsible={responsible}
+        contractor={contractor}
+        contractors={contractors}
+      />
 
       <div className="border border-geo-amber/30 bg-geo-amber/5 px-4 py-3 flex items-center gap-3">
         <Icon name="Info" size={14} className="text-geo-amber" />

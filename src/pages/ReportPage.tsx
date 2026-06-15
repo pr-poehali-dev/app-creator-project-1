@@ -223,37 +223,37 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                   setAbstractData={setAbstractData}
                 />
               ) : activeTab === "illustrations" ? (
-                <IllustrationsSection reportId={report.id} />
+                <IllustrationsSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "tables" ? (
-                <TablesSection reportId={report.id} />
+                <TablesSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "text_appendices" ? (
-                <TextAppendicesSection reportId={report.id} />
+                <TextAppendicesSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "graphic_appendices" ? (
-                <GraphicAppendicesSection reportId={report.id} />
+                <GraphicAppendicesSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "terms" ? (
-                <TermsSection reportId={report.id} />
+                <TermsSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "text_part" ? (
                 <TextPartSection reportId={report.id} />
               ) : activeTab === "references" ? (
-                <ReferencesSection reportId={report.id} />
+                <ReferencesSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "metrological" ? (
-                <MetrologicalSection reportId={report.id} />
+                <MetrologicalSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "patent" ? (
-                <PatentSection reportId={report.id} />
+                <PatentSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "review" ? (
-                <ReviewSection reportId={report.id} />
+                <ReviewSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "protocol" ? (
-                <ProtocolSection reportId={report.id} />
+                <ProtocolSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "cost" ? (
-                <CostSection reportId={report.id} />
+                <CostSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "transfer_acts" ? (
-                <TransferActsSection reportId={report.id} />
+                <TransferActsSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "text_app_files" ? (
-                <TextAppFilesSection reportId={report.id} />
+                <TextAppFilesSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "graphic_app_files" ? (
-                <GraphicAppFilesSection reportId={report.id} />
+                <GraphicAppFilesSection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "task_copy" ? (
-                <TaskCopySection reportId={report.id} />
+                <TaskCopySection reportId={report.id} secrecy={report.secrecy} responsible={report.responsible} contractor={contractor} contractors={contractors} />
               ) : activeTab === "contents" ? (
                 <ContentsSection
                   report={report}

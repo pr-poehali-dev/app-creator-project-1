@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { UPLOAD_URL } from "./reportTypes";
+import { SectionMeta } from "./SectionMeta";
+import type { Secrecy, Contractor } from "@/types/geo";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -110,7 +112,13 @@ function FileUploadArea({ file, onUpload, onRemove, folder }: {
 
 // ─── MetrologicalSection ──────────────────────────────────────────────────────
 
-export function MetrologicalSection({ reportId }: { reportId: string }) {
+export function MetrologicalSection({ reportId, secrecy, responsible, contractor, contractors }: {
+  reportId: string;
+  secrecy: Secrecy;
+  responsible: string;
+  contractor?: Contractor;
+  contractors?: Contractor[];
+}) {
   const storageKey = `geo_metrological_${reportId}`;
 
   const load = (): MetroData => {
@@ -146,6 +154,15 @@ export function MetrologicalSection({ reportId }: { reportId: string }) {
         </div>
         <p className="text-xs text-muted-foreground font-mono ml-7">ГОСТ Р 53579–2009 · структурный элемент 14 · при наличии</p>
       </div>
+
+      <SectionMeta
+        reportId={reportId}
+        tabId="metrological"
+        secrecy={secrecy}
+        responsible={responsible}
+        contractor={contractor}
+        contractors={contractors}
+      />
 
       {/* Type selector */}
       <div className="space-y-2">

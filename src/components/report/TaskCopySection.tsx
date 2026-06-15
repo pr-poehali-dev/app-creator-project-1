@@ -2,8 +2,16 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { TaskFile } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
+import { SectionMeta } from "./SectionMeta";
+import type { Secrecy, Contractor } from "@/types/geo";
 
-export function TaskCopySection({ reportId }: { reportId: string }) {
+export function TaskCopySection({ reportId, secrecy, responsible, contractor, contractors }: {
+  reportId: string;
+  secrecy: Secrecy;
+  responsible: string;
+  contractor?: Contractor;
+  contractors?: Contractor[];
+}) {
   const storageKey = `geo_task_file_${reportId}`;
   const [file, setFile] = useState<TaskFile | null>(() => {
     try { return JSON.parse(localStorage.getItem(storageKey) || "null"); } catch { return null; }
@@ -60,6 +68,15 @@ export function TaskCopySection({ reportId }: { reportId: string }) {
         </div>
         <p className="text-xs text-muted-foreground font-mono ml-7">ГОСТ Р 53579–2009 · структурный элемент 5</p>
       </div>
+
+      <SectionMeta
+        reportId={reportId}
+        tabId="task_copy"
+        secrecy={secrecy}
+        responsible={responsible}
+        contractor={contractor}
+        contractors={contractors}
+      />
 
       {!file ? (
         <label onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}

@@ -2,10 +2,18 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { GraphicAppendix } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
+import { SectionMeta } from "./SectionMeta";
+import type { Secrecy, Contractor } from "@/types/geo";
 
 const COMMON_SCALES = ["1:500", "1:1 000", "1:2 000", "1:5 000", "1:10 000", "1:25 000", "1:50 000", "1:100 000", "1:200 000", "1:500 000", "1:1 000 000"];
 
-export function GraphicAppendicesSection({ reportId }: { reportId: string }) {
+export function GraphicAppendicesSection({ reportId, secrecy, responsible, contractor, contractors }: {
+  reportId: string;
+  secrecy: Secrecy;
+  responsible: string;
+  contractor?: Contractor;
+  contractors?: Contractor[];
+}) {
   const storageKey = `geo_graphic_appendices_${reportId}`;
 
   const load = (): GraphicAppendix[] => {
@@ -108,6 +116,15 @@ export function GraphicAppendicesSection({ reportId }: { reportId: string }) {
         </div>
         <p className="text-xs text-muted-foreground font-mono ml-7">ГОСТ Р 53579–2009 · структурный элемент 10 · при наличии</p>
       </div>
+
+      <SectionMeta
+        reportId={reportId}
+        tabId="graphic_appendices"
+        secrecy={secrecy}
+        responsible={responsible}
+        contractor={contractor}
+        contractors={contractors}
+      />
 
       <div className="border border-geo-amber/30 bg-geo-amber/5 px-4 py-3 flex items-center gap-3">
         <Icon name="Info" size={14} className="text-geo-amber" />

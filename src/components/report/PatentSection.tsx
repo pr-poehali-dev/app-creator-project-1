@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { UPLOAD_URL } from "./reportTypes";
+import { SectionMeta } from "./SectionMeta";
+import type { Secrecy, Contractor } from "@/types/geo";
 
 interface PatentFile {
   url: string;
@@ -8,7 +10,13 @@ interface PatentFile {
   uploadedAt: string;
 }
 
-export function PatentSection({ reportId }: { reportId: string }) {
+export function PatentSection({ reportId, secrecy, responsible, contractor, contractors }: {
+  reportId: string;
+  secrecy: Secrecy;
+  responsible: string;
+  contractor?: Contractor;
+  contractors?: Contractor[];
+}) {
   const storageKey = `geo_patent_${reportId}`;
 
   const load = (): PatentFile | null => {
@@ -62,6 +70,15 @@ export function PatentSection({ reportId }: { reportId: string }) {
         </div>
         <p className="text-xs text-muted-foreground font-mono ml-7">ГОСТ Р 53579–2009 · структурный элемент 15 · если проводились</p>
       </div>
+
+      <SectionMeta
+        reportId={reportId}
+        tabId="patent"
+        secrecy={secrecy}
+        responsible={responsible}
+        contractor={contractor}
+        contractors={contractors}
+      />
 
       <div className="border border-geo-amber/30 bg-geo-amber/5 px-4 py-3 flex items-center gap-3">
         <Icon name="Info" size={14} className="text-geo-amber" />
