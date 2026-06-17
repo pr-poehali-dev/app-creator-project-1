@@ -156,3 +156,22 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--geo-amber-dim));
 }
+
+/* ─── PDF export pages ──────────────────────────────────────────────────────── */
+.pdf-page {
+  page-break-before: always;
+  break-before: page;
+  padding: 20mm 20mm 15mm 25mm;
+  min-height: 257mm; /* A4 270mm - margins */
+  box-sizing: border-box;
+  background: #fff;
+  color: #000;
+  font-family: "Times New Roman", serif;
+  font-size: 11pt;
+  line-height: 1.5;
+}
+
+.pdf-page:first-child {
+  page-break-before: avoid;
+  break-before: avoid;
+}

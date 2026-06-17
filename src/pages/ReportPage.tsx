@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
 import { TABS, DEFAULT_LABEL, DEFAULT_TITLE_PAGE, DEFAULT_ABSTRACT } from "@/components/report/reportTypes";
 import type { TabId, LabelData, TitlePageData, AbstractData } from "@/components/report/reportTypes";
+import { collectPdfData, exportToPdf } from "@/components/report/exportPdf";
 import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } from "@/components/report/ReportSections1";
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
 import { IllustrationsSection } from "@/components/report/IllustrationsSection";
@@ -35,6 +36,17 @@ interface ReportPageProps {
 
 export default function ReportPage({ report, customers, contractors, licenses, contracts, onBack, onUpdateReport }: ReportPageProps) {
   const [activeTab, setActiveTab] = useState<TabId>("label");
+  const [pdfExporting, setPdfExporting] = useState(false);
+
+  const handleExportPdf = async () => {
+    setPdfExporting(true);
+    try {
+      const data = collectPdfData(report, customers, contractors, licenses, contracts);
+      await exportToPdf(data);
+    } finally {
+      setPdfExporting(false);
+    }
+  };
 
   const [labelData, setLabelData] = useState<LabelData>(() => {
     try {
@@ -118,6 +130,14 @@ export default function ReportPage({ report, customers, contractors, licenses, c
             <span className="font-mono text-xs text-muted-foreground hidden sm:block border border-border px-2 py-0.5">
               ГОСТ Р 53579–2009
             </span>
+            <button
+              onClick={handleExportPdf}
+              disabled={pdfExporting}
+              className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Icon name={pdfExporting ? "Loader2" : "FileDown"} size={13} className={pdfExporting ? "animate-spin" : ""} />
+              {pdfExporting ? "Генерация..." : "Экспорт PDF"}
+            </button>
           </div>
         </div>
       </header>
