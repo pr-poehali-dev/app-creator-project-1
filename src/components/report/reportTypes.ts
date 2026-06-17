@@ -40,7 +40,7 @@ export const TABS: TabDef[] = [
   { id: "title_page",        label: "Титульный лист",                                   shortLabel: "Титул",         icon: "FileText" },
   { id: "executors",         label: "Список исполнителей",                              shortLabel: "Исполнители",   icon: "Users" },
   { id: "abstract",          label: "Реферат",                                          shortLabel: "Реферат",       icon: "AlignLeft" },
-  { id: "task_copy",         label: "Копия геол. задания / контракта / договора",       shortLabel: "Задание",       icon: "Copy" },
+  { id: "task_copy",         label: "Копия геол. / техн. задания / контракта / договора", shortLabel: "Задание",       icon: "Copy" },
   { id: "contents",          label: "Содержание",                                       shortLabel: "Содержание",    icon: "List" },
   { id: "illustrations",     label: "Список иллюстраций",                               shortLabel: "Иллюстрации",   icon: "Image",        note: "при наличии" },
   { id: "tables",            label: "Список таблиц (текстовая часть)",                  shortLabel: "Таблицы",       icon: "Table",        note: "при наличии" },

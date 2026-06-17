@@ -72,7 +72,7 @@ export function buildContents(
 
   const arr = (v: unknown) => Array.isArray(v) ? v.length : 0;
 
-  entries.push({ id: "task_copy",          level: 0, title: "Копия геологического задания",                page: "—", status: hasTask ? "file" : "empty", note: taskFile?.filename || undefined });
+  entries.push({ id: "task_copy",          level: 0, title: "Копия геологического / технического задания",                page: "—", status: hasTask ? "file" : "empty", note: taskFile?.filename || undefined });
   entries.push({ id: "contents",           level: 0, title: "Содержание",                                   page: "—", status: "filled" });
   entries.push({ id: "illustrations",      level: 0, title: "Список иллюстраций",                           page: "—", status: arr(illustrations) > 0 ? "filled" : "empty", note: arr(illustrations) > 0 ? `${arr(illustrations)} ил.` : "при наличии" });
   entries.push({ id: "tables",             level: 0, title: "Список таблиц в текстовой части",              page: "—", status: arr(tables) > 0 ? "filled" : "empty", note: arr(tables) > 0 ? `${arr(tables)} табл.` : "при наличии" });

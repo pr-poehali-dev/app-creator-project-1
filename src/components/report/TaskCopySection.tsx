@@ -64,7 +64,7 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
       <div>
         <div className="flex items-center gap-3 mb-1">
           <Icon name="Copy" size={18} className="text-geo-amber" />
-          <h3 className="font-display text-xl tracking-wider uppercase text-foreground">Копия геологического задания</h3>
+          <h3 className="font-display text-xl tracking-wider uppercase text-foreground">Копия геологического / технического задания</h3>
         </div>
         <p className="text-xs text-muted-foreground font-mono ml-7">ГОСТ Р 53579–2009 · структурный элемент 5</p>
       </div>
