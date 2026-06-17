@@ -97,6 +97,7 @@ export function ReportsSection({
   const [modal, setModal] = useState<null | "add" | ReportData>(null);
   const [form, setForm] = useState<Omit<ReportData, "id">>(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
   const [pdfUploading, setPdfUploading] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
@@ -234,30 +235,9 @@ export function ReportsSection({
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                   <FieldGroup label="Заказчик" value={customerName(r.customerId)} />
                   <FieldGroup label="Исполнитель" value={contractorName(r.contractorId)} />
-                  <FieldGroup label="Лицензия" value={r.licenseNumber ? `${r.licenseNumber}${r.licenseId ? ` · ${licenseName(r.licenseId)}` : ""}` : licenseName(r.licenseId)} />
+                  <FieldGroup label="Лицензия" value={r.licenseNumber || licenseName(r.licenseId)} />
                   <FieldGroup label="Гос. контракт" value={contractName(r.contractId)} />
                   <FieldGroup label="Ответственный исполнитель" value={r.responsible} />
-                  {r.coordLat && <FieldGroup label="Координаты" value={`${r.coordLat} с.ш. / ${r.coordLon} в.д.`} />}
-                  {r.extractionVolumeDayCurrent && (
-                    <FieldGroup
-                      label="Объём добычи"
-                      value={`${r.extractionVolumeDayCurrent} м³/сут · ${r.extractionVolumeYearCurrent ?? "—"} тыс.м³/год`}
-                    />
-                  )}
-                  {r.licensePdfUrl && (
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Лицензия PDF</div>
-                      <a
-                        href={r.licensePdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-geo-amber hover:underline flex items-center gap-1"
-                      >
-                        <Icon name="FileText" size={12} />
-                        {r.licensePdfName || "Открыть"}
-                      </a>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="flex flex-col gap-2 ml-4">
@@ -267,6 +247,13 @@ export function ReportsSection({
                 >
                   <Icon name="FolderOpen" size={12} />
                   Открыть
+                </button>
+                <button
+                  onClick={() => setViewId(r.id)}
+                  className="flex items-center gap-1.5 border border-border text-muted-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:border-geo-amber hover:text-geo-amber transition-colors"
+                >
+                  <Icon name="Info" size={12} />
+                  Сведения
                 </button>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => openEdit(r)} className="p-1.5 text-muted-foreground hover:text-geo-amber transition-colors">
@@ -281,6 +268,78 @@ export function ReportsSection({
           </div>
         ))}
       </div>
+
+      {viewId && (() => {
+        const r = reports.find((x) => x.id === viewId)!;
+        return (
+          <Modal title="Общие сведения об отчёте" onClose={() => setViewId(null)} wide>
+            <SectionDivider title="Основные данные" />
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              <FieldGroup label="Наименование" value={r.title} />
+              <FieldGroup label="Год" value={r.year} />
+              <FieldGroup label="Заказчик" value={customerName(r.customerId)} />
+              <FieldGroup label="Исполнитель" value={contractorName(r.contractorId)} />
+              <FieldGroup label="Ответственный" value={r.responsible} />
+              <FieldGroup label="Гос. регистрация" value={r.govRegNumber} />
+              <FieldGroup label="Место выпуска" value={r.place} />
+              <FieldGroup label="Гриф" value={r.secrecy} />
+            </div>
+
+            <SectionDivider title="Лицензия на недропользование" />
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              <FieldGroup label="Номер лицензии" value={r.licenseNumber} />
+              <FieldGroup label="Дата выдачи" value={r.licenseDate} />
+              <FieldGroup label="Действует до" value={r.licenseExpiry} />
+            </div>
+            {r.licensePdfUrl && (
+              <div className="space-y-0.5">
+                <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest">PDF лицензии</div>
+                <a href={r.licensePdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-geo-amber hover:underline">
+                  <Icon name="FileText" size={14} />
+                  {r.licensePdfName || "Открыть файл"}
+                </a>
+              </div>
+            )}
+
+            <SectionDivider title="Участок недр" />
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              <FieldGroup label="Описание" value={r.siteDescription} />
+              <FieldGroup label="Ограничение по глубине" value={r.depthLimit != null ? `${r.depthLimit} м` : ""} />
+              <FieldGroup label="Северная широта" value={r.coordLat} />
+              <FieldGroup label="Восточная долгота" value={r.coordLon} />
+            </div>
+
+            <SectionDivider title="Добыча подземных вод" />
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              <FieldGroup label="Цель использования" value={r.waterUseType} />
+              <div />
+              <FieldGroup label="Текущий объём, м³/сут" value={r.extractionVolumeDayCurrent != null ? String(r.extractionVolumeDayCurrent) : ""} />
+              <FieldGroup label="Текущий объём, тыс.м³/год" value={r.extractionVolumeYearCurrent != null ? String(r.extractionVolumeYearCurrent) : ""} />
+              <FieldGroup label="Перспектива, м³/сут" value={r.extractionVolumeDayPlan != null ? String(r.extractionVolumeDayPlan) : ""} />
+              <FieldGroup label="Перспектива, тыс.м³/год" value={r.extractionVolumeYearPlan != null ? String(r.extractionVolumeYearPlan) : ""} />
+            </div>
+
+            <SectionDivider title="Водоносный горизонт" />
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              <FieldGroup label="Наименование горизонта" value={r.aquiferName} />
+              <div />
+              <FieldGroup label="Кровля залегания" value={r.aquiferDepthTop != null ? `${r.aquiferDepthTop} м` : ""} />
+              <FieldGroup label="Статический уровень" value={r.aquiferStaticLevel != null ? `${r.aquiferStaticLevel} м` : ""} />
+              <FieldGroup label="Доп. понижение уровня" value={r.aquiferAllowableDrop != null ? `${r.aquiferAllowableDrop} м` : ""} />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => { setViewId(null); openEdit(r); }} className="flex items-center gap-2 border border-border text-muted-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:border-geo-amber hover:text-geo-amber transition-colors">
+                <Icon name="Pencil" size={12} />
+                Редактировать
+              </button>
+              <button onClick={() => setViewId(null)} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+                Закрыть
+              </button>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {modal && (
         <Modal title={modal === "add" ? "Новый отчёт" : "Редактировать отчёт"} onClose={() => setModal(null)} wide>
