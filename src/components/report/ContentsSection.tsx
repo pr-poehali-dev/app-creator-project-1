@@ -52,27 +52,47 @@ export function buildContents(
     entries.push({ id: "abstract_kw", level: 1, title: "Ключевые слова", page: "—", status: abstract.keywords ? "filled" : "empty" });
   }
 
+  const illustrations: unknown[]   = load(`geo_illustrations_${reportId}`) || [];
+  const tables: unknown[]          = load(`geo_tables_${reportId}`) || [];
+  const textApps: unknown[]        = load(`geo_text_appendices_${reportId}`) || [];
+  const graphicApps: unknown[]     = load(`geo_graphic_appendices_${reportId}`) || [];
+  const terms: unknown[]           = load(`geo_terms_${reportId}`) || [];
+  const references: unknown[]      = load(`geo_references_${reportId}`) || [];
+  const intro: unknown[]           = load(`geo_intro_${reportId}`) || [];
+  const mainText: unknown[]        = load(`geo_main_text_${reportId}`) || [];
+  const conclusion: unknown[]      = load(`geo_conclusion_${reportId}`) || [];
+  const metrological               = load(`geo_metrological_${reportId}`);
+  const patent                     = load(`geo_patent_${reportId}`);
+  const review                     = load(`geo_review_${reportId}`);
+  const protocol                   = load(`geo_protocol_${reportId}`);
+  const cost                       = load(`geo_cost_${reportId}`);
+  const transferActs: unknown[]    = load(`geo_transfer_acts_${reportId}`) || [];
+  const textAppFiles: unknown[]    = load(`geo_text_app_files_${reportId}`) || [];
+  const graphicAppFiles: unknown[] = load(`geo_graphic_app_files_${reportId}`) || [];
+
+  const arr = (v: unknown) => Array.isArray(v) ? v.length : 0;
+
   entries.push({ id: "task_copy",          level: 0, title: "Копия геологического задания",                page: "—", status: hasTask ? "file" : "empty", note: taskFile?.filename || undefined });
   entries.push({ id: "contents",           level: 0, title: "Содержание",                                   page: "—", status: "filled" });
-  entries.push({ id: "illustrations",      level: 0, title: "Список иллюстраций",                           page: "—", status: "empty", note: "при наличии" });
-  entries.push({ id: "tables",             level: 0, title: "Список таблиц в текстовой части",              page: "—", status: "empty", note: "при наличии" });
-  entries.push({ id: "text_appendices",    level: 0, title: "Список текстовых приложений",                  page: "—", status: "empty", note: "при наличии" });
-  entries.push({ id: "graphic_appendices", level: 0, title: "Список графических приложений",                page: "—", status: "empty", note: "при наличии" });
+  entries.push({ id: "illustrations",      level: 0, title: "Список иллюстраций",                           page: "—", status: arr(illustrations) > 0 ? "filled" : "empty", note: arr(illustrations) > 0 ? `${arr(illustrations)} ил.` : "при наличии" });
+  entries.push({ id: "tables",             level: 0, title: "Список таблиц в текстовой части",              page: "—", status: arr(tables) > 0 ? "filled" : "empty", note: arr(tables) > 0 ? `${arr(tables)} табл.` : "при наличии" });
+  entries.push({ id: "text_appendices",    level: 0, title: "Список текстовых приложений",                  page: "—", status: arr(textApps) > 0 ? "filled" : "empty", note: arr(textApps) > 0 ? `${arr(textApps)} прил.` : "при наличии" });
+  entries.push({ id: "graphic_appendices", level: 0, title: "Список графических приложений",                page: "—", status: arr(graphicApps) > 0 ? "filled" : "empty", note: arr(graphicApps) > 0 ? `${arr(graphicApps)} прил.` : "при наличии" });
   entries.push({ id: "machine_readable",   level: 0, title: "Содержание машиночитаемой версии отчёта",      page: "—", status: "empty" });
-  entries.push({ id: "terms",              level: 0, title: "Перечень терминов, сокращений, символов",      page: "—", status: "empty", note: "при наличии" });
-  entries.push({ id: "text_part",          level: 0, title: "Текстовая часть",                              page: "—", status: "empty" });
-  entries.push({ id: "text_part_intro",    level: 1, title: "Введение",                                     page: "—", status: "empty" });
-  entries.push({ id: "text_part_main",     level: 1, title: "Основная часть",                               page: "—", status: "empty" });
-  entries.push({ id: "text_part_conc",     level: 1, title: "Заключение",                                   page: "—", status: "empty" });
-  entries.push({ id: "references",         level: 0, title: "Список использованных источников",             page: "—", status: "empty" });
-  entries.push({ id: "metrological",       level: 0, title: "Заключение о метрологической экспертизе",      page: "—", status: "empty" });
-  entries.push({ id: "patent",             level: 0, title: "Заключение о патентных исследованиях",         page: "—", status: "empty", note: "если проводились" });
-  entries.push({ id: "review",             level: 0, title: "Рецензия (рецензии)",                          page: "—", status: "empty" });
-  entries.push({ id: "protocol",           level: 0, title: "Протокол рассмотрения (принятия) отчёта",      page: "—", status: "empty" });
-  entries.push({ id: "cost",               level: 0, title: "Справка о стоимости работ",                    page: "—", status: "empty" });
-  entries.push({ id: "transfer_acts",      level: 0, title: "Копии актов передачи вещественных источников", page: "—", status: "empty" });
-  entries.push({ id: "text_app_files",     level: 0, title: "Текстовые приложения",                        page: "—", status: "empty" });
-  entries.push({ id: "graphic_app_files",  level: 0, title: "Графические приложения",                      page: "—", status: "empty", note: "если предусмотрены" });
+  entries.push({ id: "terms",              level: 0, title: "Перечень терминов, сокращений, символов",      page: "—", status: arr(terms) > 0 ? "filled" : "empty", note: arr(terms) > 0 ? `${arr(terms)} ед.` : "при наличии" });
+  entries.push({ id: "text_part",          level: 0, title: "Текстовая часть",                              page: "—", status: arr(intro) + arr(mainText) + arr(conclusion) > 0 ? "partial" : "empty" });
+  entries.push({ id: "text_part_intro",    level: 1, title: "Введение",                                     page: "—", status: arr(intro) > 0 ? "filled" : "empty" });
+  entries.push({ id: "text_part_main",     level: 1, title: "Основная часть",                               page: "—", status: arr(mainText) > 0 ? "filled" : "empty" });
+  entries.push({ id: "text_part_conc",     level: 1, title: "Заключение",                                   page: "—", status: arr(conclusion) > 0 ? "filled" : "empty" });
+  entries.push({ id: "references",         level: 0, title: "Список использованных источников",             page: "—", status: arr(references) > 0 ? "filled" : "empty", note: arr(references) > 0 ? `${arr(references)} ист.` : undefined });
+  entries.push({ id: "metrological",       level: 0, title: "Заключение о метрологической экспертизе",      page: "—", status: metrological ? "file" : "empty" });
+  entries.push({ id: "patent",             level: 0, title: "Заключение о патентных исследованиях",         page: "—", status: patent ? "file" : "empty", note: patent ? undefined : "если проводились" });
+  entries.push({ id: "review",             level: 0, title: "Рецензия (рецензии)",                          page: "—", status: review ? "file" : "empty" });
+  entries.push({ id: "protocol",           level: 0, title: "Протокол рассмотрения (принятия) отчёта",      page: "—", status: protocol ? "file" : "empty" });
+  entries.push({ id: "cost",               level: 0, title: "Справка о стоимости работ",                    page: "—", status: cost ? "file" : "empty" });
+  entries.push({ id: "transfer_acts",      level: 0, title: "Копии актов передачи вещественных источников", page: "—", status: arr(transferActs) > 0 ? "file" : "empty" });
+  entries.push({ id: "text_app_files",     level: 0, title: "Текстовые приложения",                        page: "—", status: arr(textAppFiles) > 0 ? "file" : "empty" });
+  entries.push({ id: "graphic_app_files",  level: 0, title: "Графические приложения",                      page: "—", status: arr(graphicAppFiles) > 0 ? "file" : "empty", note: arr(graphicAppFiles) === 0 ? "если предусмотрены" : undefined });
 
   return entries;
 }

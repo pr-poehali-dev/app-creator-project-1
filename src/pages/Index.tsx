@@ -502,13 +502,8 @@ function seedReport2() {
     },
   ]));
 
-  // Справка о стоимости работ
-  localStorage.setItem(`geo_cost_${REPORT2_ID}`, JSON.stringify({
-    url: "",
-    filename: "",
-    uploadedAt: "",
-    note: "Работы выполнены за счёт средств СПК «Шашково» в соответствии с лицензионным соглашением ЯРЛ 57970 ВЭ",
-  }));
+  // Справка о стоимости работ — файл не загружен, оставляем null (пользователь загрузит PDF)
+  // localStorage.setItem(`geo_cost_${REPORT2_ID}`, JSON.stringify(null));
 }
 
 // ─── Nav Items ────────────────────────────────────────────────────────────────
