@@ -367,11 +367,28 @@ export default function Index() {
 
   const [section, setSection] = useState<Section>("reports");
   const [openReportId, setOpenReportId] = useState<string | null>(null);
+  const [resetConfirm, setResetConfirm] = useState(false);
   const [customers,    setCustomers]    = useLocalStorage<Customer[]>  ("geo_customers",    INIT_CUSTOMERS);
   const [contractors,  setContractors]  = useLocalStorage<Contractor[]>("geo_contractors",  INIT_CONTRACTORS);
   const [licenses,     setLicenses]     = useLocalStorage<License[]>   ("geo_licenses",     INIT_LICENSES);
   const [contracts,    setContracts]    = useLocalStorage<Contract[]>  ("geo_contracts",    INIT_CONTRACTS);
   const [reports,      setReports]      = useLocalStorage<ReportData[]>("geo_reports",      INIT_REPORTS);
+
+  const handleReset = () => {
+    // Удаляем все geo_* ключи из localStorage
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("geo_"))
+      .forEach((k) => localStorage.removeItem(k));
+    // Записываем начальные справочники
+    localStorage.setItem("geo_customers",   JSON.stringify(INIT_CUSTOMERS));
+    localStorage.setItem("geo_contractors", JSON.stringify(INIT_CONTRACTORS));
+    localStorage.setItem("geo_licenses",    JSON.stringify(INIT_LICENSES));
+    localStorage.setItem("geo_contracts",   JSON.stringify(INIT_CONTRACTS));
+    localStorage.setItem("geo_reports",     JSON.stringify(INIT_REPORTS));
+    // Пересеваем данные отчёта 2
+    seedReport2();
+    window.location.reload();
+  };
 
   const openReport = reports.find((r) => r.id === openReportId);
 
@@ -458,6 +475,16 @@ export default function Index() {
               </div>
             ))}
           </div>
+
+          <div className="p-4 border-t border-border">
+            <button
+              onClick={() => setResetConfirm(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-mono text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/30 transition-all"
+            >
+              <Icon name="RotateCcw" size={12} />
+              Сбросить данные
+            </button>
+          </div>
         </aside>
 
         {/* Mobile tabs */}
@@ -492,6 +519,43 @@ export default function Index() {
         <span className="font-mono text-xs text-muted-foreground">Система формирования геологических отчётов</span>
         <span className="font-mono text-xs text-muted-foreground/50">v0.1.0</span>
       </footer>
+
+      {resetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setResetConfirm(false)} />
+          <div className="relative z-10 w-full max-w-sm bg-card border border-border mx-4 animate-scale-in">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Icon name="TriangleAlert" size={16} className="text-destructive" />
+                <h3 className="font-display text-base tracking-wider uppercase text-foreground">Сброс данных</h3>
+              </div>
+              <button onClick={() => setResetConfirm(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Все данные (отчёты, справочники, заполненные разделы) будут удалены и заменены тестовыми данными. Действие необратимо.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleReset}
+                  className="flex-1 flex items-center justify-center gap-2 bg-destructive text-destructive-foreground py-2 text-sm font-display tracking-wider uppercase hover:opacity-90 transition-opacity"
+                >
+                  <Icon name="RotateCcw" size={14} />
+                  Сбросить
+                </button>
+                <button
+                  onClick={() => setResetConfirm(false)}
+                  className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
