@@ -244,6 +244,9 @@ export function TextAppendicesSection({ reportId, secrecy, responsible, contract
                     <p className="text-xs font-mono text-muted-foreground/50 mt-0.5">загружен {form.uploadedAt ? new Date(form.uploadedAt).toLocaleDateString("ru-RU") : ""}</p>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
+                    <a href={form.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber transition-colors">
+                      <Icon name="ExternalLink" size={12} /> Открыть
+                    </a>
                     <label className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber cursor-pointer transition-colors">
                       <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); }} />
                       <Icon name="RefreshCw" size={12} /> Заменить
