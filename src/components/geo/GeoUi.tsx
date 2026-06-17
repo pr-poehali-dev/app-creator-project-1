@@ -99,11 +99,11 @@ export function SectionHeader({
   );
 }
 
-export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg bg-card border border-border animate-scale-in mx-4">
+      <div className={`relative z-10 w-full bg-card border border-border animate-scale-in mx-4 ${wide ? "max-w-2xl" : "max-w-lg"}`}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h3 className="font-display text-lg tracking-wider uppercase text-foreground">{title}</h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">

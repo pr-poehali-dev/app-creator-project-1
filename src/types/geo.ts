@@ -66,4 +66,30 @@ export interface ReportData {
   year: string;
   govRegNumber: string;
   coContractors: CoContractor[];
+
+  // Сведения о лицензии на недропользование
+  licenseNumber: string;         // Номер лицензии (ЯРЛ 57970 ВЭ)
+  licenseDate: string;           // Дата выдачи лицензии
+  licenseExpiry: string;         // Срок действия до
+  licensePdfUrl: string;         // URL загруженного PDF лицензии
+  licensePdfName: string;        // Имя файла PDF
+
+  // Участок недр
+  siteDescription: string;       // Описание участка (адм.-территор. расположение)
+  coordLat: string;              // Северная широта (58° 00' 42")
+  coordLon: string;              // Восточная долгота (39° 11' 10")
+  depthLimit: number | null;     // Ограничение по глубине, м
+
+  // Добыча подземных вод
+  extractionVolumeDayCurrent: number | null;  // Объём добычи м³/сут (текущий)
+  extractionVolumeYearCurrent: number | null; // Объём добычи тыс.м³/год (текущий)
+  extractionVolumeDayPlan: number | null;     // Объём добычи м³/сут (перспектива)
+  extractionVolumeYearPlan: number | null;    // Объём добычи тыс.м³/год (перспектива)
+  waterUseType: string;          // Цель использования воды
+
+  // Водоносный горизонт
+  aquiferName: string;           // Наименование водоносного горизонта
+  aquiferDepthTop: number | null;   // Кровля залегания, м
+  aquiferStaticLevel: number | null; // Статический уровень, м от поверхности
+  aquiferAllowableDrop: number | null; // Допустимое понижение уровня, м
 }
