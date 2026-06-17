@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { TableEntry } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 const FILE_ICON: Record<string, string> = {
@@ -44,6 +45,7 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
   const [form, setForm] = useState({ title: "", textPage: "", fileUrl: "", filename: "", fileType: "" as TableEntry["fileType"] | "", uploadedAt: "" });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const nextNumber = items.length > 0 ? Math.max(...items.map((i) => i.number)) + 1 : 1;
 
@@ -125,6 +127,7 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-1">
@@ -187,11 +190,11 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
                   </td>
                   <td className="px-4 py-3">
                     {item.fileUrl ? (
-                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer"
+                      <button onClick={() => openPreview(item.fileUrl!, item.filename || item.title)}
                         className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono border transition-colors hover:opacity-80 ${FILE_COLOR[item.fileType || "other"]}`}>
                         <Icon name={FILE_ICON[item.fileType || "other"]} fallback="File" size={12} />
                         {(item.fileType || "").toUpperCase() || "—"}
-                      </a>
+                      </button>
                     ) : (
                       <span className="font-mono text-xs text-muted-foreground/30">—</span>
                     )}

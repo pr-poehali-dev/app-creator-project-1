@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { GraphicAppendix } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 const COMMON_SCALES = ["1:500", "1:1 000", "1:2 000", "1:5 000", "1:10 000", "1:25 000", "1:50 000", "1:100 000", "1:200 000", "1:500 000", "1:1 000 000"];
@@ -38,6 +39,7 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
 
   // Delete confirm
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const persist = (next: GraphicAppendix[]) => {
     const renumbered = next.map((a, idx) => ({ ...a, number: idx + 1 }));
@@ -95,6 +97,7 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-1">
@@ -233,10 +236,10 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
                           </p>
                         </div>
                         <div className="flex gap-3 flex-shrink-0">
-                          <a href={app.fileUrl} target="_blank" rel="noopener noreferrer"
+                          <button onClick={() => openPreview(app.fileUrl!, app.filename)}
                             className="flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors">
-                            <Icon name="ExternalLink" size={11} /> Открыть
-                          </a>
+                            <Icon name="Eye" size={11} /> Просмотр
+                          </button>
                           <label className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber cursor-pointer transition-colors">
                             <input type="file" accept=".pdf,application/pdf" className="hidden"
                               onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f, app.id); }} />

@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { TextAppendix } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 export function TextAppendicesSection({ reportId, secrecy, responsible, contractor, contractors }: {
@@ -26,6 +27,7 @@ export function TextAppendicesSection({ reportId, secrecy, responsible, contract
   const [form, setForm] = useState({ title: "", textPage: "", fileUrl: "", filename: "", uploadedAt: "" });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const nextNumber = items.length > 0 ? Math.max(...items.map((i) => i.number)) + 1 : 1;
 
@@ -107,6 +109,7 @@ export function TextAppendicesSection({ reportId, secrecy, responsible, contract
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       <div>
         <div className="flex items-center gap-3 mb-1">
           <Icon name="FileStack" size={18} className="text-geo-amber" />
@@ -166,10 +169,10 @@ export function TextAppendicesSection({ reportId, secrecy, responsible, contract
                   </td>
                   <td className="px-4 py-3">
                     {item.fileUrl ? (
-                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer"
+                      <button onClick={() => openPreview(item.fileUrl!, item.filename)}
                         className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono border text-destructive/70 border-destructive/30 bg-destructive/5 hover:opacity-80 transition-opacity">
-                        <Icon name="FileText" size={12} /> PDF
-                      </a>
+                        <Icon name="Eye" size={12} /> PDF
+                      </button>
                     ) : (
                       <span className="font-mono text-xs text-muted-foreground/30">—</span>
                     )}

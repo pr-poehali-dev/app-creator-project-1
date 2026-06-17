@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -33,11 +34,12 @@ function newId() { return Date.now().toString() + Math.random().toString(36).sli
 
 // ─── FileUploadArea ───────────────────────────────────────────────────────────
 
-function FileUploadArea({ file, onUpload, onRemove, folder }: {
+function FileUploadArea({ file, onUpload, onRemove, folder, onPreview }: {
   file?: MetroFile;
   onUpload: (f: MetroFile) => void;
   onRemove: () => void;
   folder: string;
+  onPreview: (url: string, filename: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -76,10 +78,10 @@ function FileUploadArea({ file, onUpload, onRemove, folder }: {
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
-          <a href={file.url} target="_blank" rel="noopener noreferrer"
+          <button onClick={() => onPreview(file.url, file.filename)}
             className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber transition-colors">
-            <Icon name="ExternalLink" size={11} /> Открыть
-          </a>
+            <Icon name="Eye" size={11} /> Просмотр
+          </button>
           <label className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber cursor-pointer transition-colors">
             <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
             <Icon name="RefreshCw" size={11} /> Заменить
@@ -127,6 +129,7 @@ export function MetrologicalSection({ reportId, secrecy, responsible, contractor
   const persist = (d: MetroData) => localStorage.setItem(storageKey, JSON.stringify(d));
 
   const [data, setData] = useState<MetroData>(load);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const update = (patch: Partial<MetroData>) => {
     const next = { ...data, ...patch };
@@ -146,6 +149,7 @@ export function MetrologicalSection({ reportId, secrecy, responsible, contractor
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-1">
@@ -248,6 +252,7 @@ export function MetrologicalSection({ reportId, secrecy, responsible, contractor
                     folder={`geo-metrological-${reportId}`}
                     onUpload={(f) => updateConclusion(c.id, { file: f })}
                     onRemove={() => updateConclusion(c.id, { file: undefined })}
+                    onPreview={openPreview}
                   />
                 </div>
               ))}
@@ -262,6 +267,7 @@ export function MetrologicalSection({ reportId, secrecy, responsible, contractor
             folder={`geo-metrological-${reportId}`}
             onUpload={(f) => update({ certificateFile: f })}
             onRemove={() => update({ certificateFile: undefined })}
+            onPreview={openPreview}
           />
           {!data.certificateFile && (
             <p className="text-xs text-muted-foreground/50 font-mono">Прикрепите справку об отсутствии объектов метрологической экспертизы в формате PDF</p>

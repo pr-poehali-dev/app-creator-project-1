@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 interface ProtocolFile {
@@ -27,6 +28,7 @@ export function ProtocolSection({ reportId, secrecy, responsible, contractor, co
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const persist = (f: ProtocolFile | null) => {
     setFile(f);
@@ -62,6 +64,7 @@ export function ProtocolSection({ reportId, secrecy, responsible, contractor, co
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       <div>
         <div className="flex items-center gap-3 mb-1">
           <Icon name="ClipboardList" size={18} className="text-geo-amber" />
@@ -118,10 +121,10 @@ export function ProtocolSection({ reportId, secrecy, responsible, contractor, co
               <p className="text-xs text-muted-foreground font-mono mt-1">
                 Загружен {new Date(file.uploadedAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })}
               </p>
-              <a href={file.url} target="_blank" rel="noopener noreferrer"
+              <button onClick={() => openPreview(file.url, file.filename)}
                 className="inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-2">
-                <Icon name="ExternalLink" size={12} /> Открыть PDF
-              </a>
+                <Icon name="Eye" size={12} /> Просмотр
+              </button>
             </div>
             <button onClick={() => persist(null)}
               className="p-2 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" title="Удалить файл">

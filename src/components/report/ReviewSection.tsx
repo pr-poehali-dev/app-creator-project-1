@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 interface ReviewFile {
@@ -31,6 +32,7 @@ export function ReviewSection({ reportId, secrecy, responsible, contractor, cont
   const [uploading, setUploading] = useState<string | null>(null); // id или "new"
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const persist = (next: ReviewFile[]) => {
     setReviews(next);
@@ -74,6 +76,7 @@ export function ReviewSection({ reportId, secrecy, responsible, contractor, cont
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-1">
@@ -170,10 +173,10 @@ export function ReviewSection({ reportId, secrecy, responsible, contractor, cont
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">
                       {new Date(r.uploadedAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })}
                     </p>
-                    <a href={r.url} target="_blank" rel="noopener noreferrer"
+                    <button onClick={() => openPreview(r.url, r.filename)}
                       className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-1">
-                      <Icon name="ExternalLink" size={11} /> Открыть PDF
-                    </a>
+                      <Icon name="Eye" size={11} /> Просмотр
+                    </button>
                   </div>
                   <label className="flex items-center gap-1.5 cursor-pointer group flex-shrink-0">
                     <input type="file" accept=".pdf,application/pdf" className="hidden"

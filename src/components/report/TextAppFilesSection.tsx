@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { TextAppendix } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 function newId() { return Date.now().toString() + Math.random().toString(36).slice(2, 6); }
@@ -34,6 +35,7 @@ export function TextAppFilesSection({ reportId, secrecy, responsible, contractor
 
   // Delete confirm
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const persist = (next: TextAppendix[]) => {
     const renumbered = next.map((a, idx) => ({ ...a, number: idx + 1 }));
@@ -97,6 +99,7 @@ export function TextAppFilesSection({ reportId, secrecy, responsible, contractor
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-1">
@@ -218,10 +221,10 @@ export function TextAppFilesSection({ reportId, secrecy, responsible, contractor
                         </p>
                       </div>
                       <div className="flex gap-3 flex-shrink-0">
-                        <a href={app.fileUrl} target="_blank" rel="noopener noreferrer"
+                        <button onClick={() => openPreview(app.fileUrl!, app.filename)}
                           className="flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors">
-                          <Icon name="ExternalLink" size={11} /> Открыть
-                        </a>
+                          <Icon name="Eye" size={11} /> Просмотр
+                        </button>
                         <label className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber cursor-pointer transition-colors">
                           <input type="file" accept=".pdf,application/pdf" className="hidden"
                             onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f, app.id); }} />

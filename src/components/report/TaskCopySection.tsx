@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { TaskFile } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 export function TaskCopySection({ reportId, secrecy, responsible, contractor, contractors }: {
@@ -19,6 +20,7 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const persist = (f: TaskFile | null) => {
     setFile(f);
@@ -61,6 +63,7 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
 
   return (
     <div className="animate-fade-in space-y-6">
+      {pdfModal}
       <div>
         <div className="flex items-center gap-3 mb-1">
           <Icon name="Copy" size={18} className="text-geo-amber" />
@@ -108,9 +111,9 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
               <p className="text-xs text-muted-foreground font-mono mt-1">
                 Загружен {new Date(file.uploadedAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })}
               </p>
-              <a href={file.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-2">
-                <Icon name="ExternalLink" size={12} /> Открыть PDF
-              </a>
+              <button onClick={() => openPreview(file.url, file.filename)} className="inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-2">
+                <Icon name="Eye" size={12} /> Просмотр
+              </button>
             </div>
             <button onClick={() => persist(null)} className="p-2 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" title="Удалить файл">
               <Icon name="Trash2" size={15} />
@@ -153,7 +156,7 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
               <td className="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-widest">URL</td>
               <td className="px-4 py-3">
                 {file ? (
-                  <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-geo-amber hover:underline truncate block max-w-xs">{file.url}</a>
+                  <button onClick={() => openPreview(file.url, file.filename)} className="text-xs font-mono text-geo-amber hover:underline truncate block max-w-xs text-left">{file.url}</button>
                 ) : "—"}
               </td>
             </tr>
