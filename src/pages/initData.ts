@@ -119,25 +119,38 @@ export const REPORT2_ID = "2";
 export const REPORT3_ID = "3";
 
 /**
- * Добавляет в сохранённый список отчётов те seed-отчёты, которых там ещё нет.
- * Нужно, чтобы новые тестовые отчёты появлялись у пользователей,
- * у которых geo_reports уже сохранён со старым набором.
+ * Дополняет сохранённый список записями из seed, которых там ещё нет (по id).
+ * Существующие записи не затираются — пользовательские правки сохраняются.
  */
-export function mergeSeedReports() {
+function mergeById<T extends { id: string }>(key: string, seed: T[]) {
   try {
-    const stored = localStorage.getItem("geo_reports");
-    const list: ReportData[] = stored ? JSON.parse(stored) : [];
+    const stored = localStorage.getItem(key);
+    const list: T[] = stored ? JSON.parse(stored) : [];
     const existingIds = new Set(list.map((r) => r.id));
     const merged = [...list];
-    for (const seed of INIT_REPORTS) {
-      if (!existingIds.has(seed.id)) merged.push(seed);
+    for (const item of seed) {
+      if (!existingIds.has(item.id)) merged.push(item);
     }
     if (merged.length !== list.length || !stored) {
-      localStorage.setItem("geo_reports", JSON.stringify(merged));
+      localStorage.setItem(key, JSON.stringify(merged));
     }
   } catch {
-    localStorage.setItem("geo_reports", JSON.stringify(INIT_REPORTS));
+    localStorage.setItem(key, JSON.stringify(seed));
   }
+}
+
+/**
+ * Добавляет недостающие seed-данные (отчёты и связанные справочники:
+ * заказчики, исполнители, лицензии, контракты) в сохранённый localStorage.
+ * Нужно, чтобы общие сведения отчётов корректно отображались и в опубликованной
+ * версии у пользователей со старым набором данных.
+ */
+export function mergeSeedReports() {
+  mergeById("geo_reports", INIT_REPORTS);
+  mergeById("geo_customers", INIT_CUSTOMERS);
+  mergeById("geo_contractors", INIT_CONTRACTORS);
+  mergeById("geo_licenses", INIT_LICENSES);
+  mergeById("geo_contracts", INIT_CONTRACTS);
 }
 
 export const INIT_REPORTS: ReportData[] = [
