@@ -1030,4 +1030,31 @@ export function seedReport3() {
     { id: "ref33", kind: "published" as const, authors: "Архипов Н.Ф., Карпышев Е.С., Молоков Л.А., Парфиянович В.А.", title: "Инженерно-геологические изыскания: Справочное пособие", publishInfo: "М.: Недра, 1989. — 288 с.: ил." },
     pub("ref34", "«Условные знаки для топографических планов масштабов 1:5000 – 1:500»"),
   ]));
+
+  // Номера страниц для «Содержания»
+  localStorage.setItem(`geo_contents_pages_${REPORT3_ID}`, JSON.stringify({
+    label: "1",
+    title_page: "2",
+    executors: "3",
+    abstract: "4",
+    task_copy: "5",
+    contents: "9",
+    illustrations: "13",
+    tables: "13",
+    text_appendices: "13",
+    graphic_appendices: "14",
+    terms: "11",
+    text_part: "12",
+    text_part_intro: "12",
+    text_part_main: "30",
+    text_part_conc: "69",
+    references: "70",
+    metrological: "76",
+    patent: "79",
+    review: "98",
+    cost: "80",
+    transfer_acts: "104",
+    text_app_files: "73",
+    graphic_app_files: "91",
+  }));
 }
