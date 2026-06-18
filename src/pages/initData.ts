@@ -37,6 +37,13 @@ export const INIT_CUSTOMERS: Customer[] = [
     inn: "7610043745",
     address: "152964, Ярославская область, Рыбинский район, п. Шашково, ул. Юбилейная, д. 54",
   },
+  {
+    id: "3",
+    name: 'ООО "КАРЬЕР"',
+    director: "Зырянов В.С.",
+    inn: "",
+    address: "Ханты-Мансийский автономный округ – Югра, г. Сургут",
+  },
 ];
 
 export const INIT_CONTRACTORS: Contractor[] = [
@@ -59,6 +66,17 @@ export const INIT_CONTRACTORS: Contractor[] = [
       { id: "e2", lastName: "Орлова", initials: "Т.Ю.", position: "Гидрогеолог", degree: "" },
     ],
   },
+  {
+    id: "3",
+    name: 'ООО "КАРЬЕР"',
+    director: "Зырянов В.С.",
+    chiefGeologist: "Маслов С.Н.",
+    responsible: "Маслов С.Н.",
+    executors: [
+      { id: "e3", lastName: "Маслов", initials: "С.Н.", position: "Маркшейдер", degree: "" },
+      { id: "e4", lastName: "Зырянов", initials: "В.С.", position: "Директор", degree: "" },
+    ],
+  },
 ];
 
 export const INIT_LICENSES: License[] = [
@@ -78,6 +96,14 @@ export const INIT_LICENSES: License[] = [
     siteName: "Участок скважины № 1914а, пос. Шашково",
     useType: "exploration_mining",
   },
+  {
+    id: "3",
+    number: "ХМН 03330 НЭ",
+    issueDate: "2017-02-13",
+    ownerId: "3",
+    siteName: "Средне-Назымский лицензионный участок, месторождение песка №6",
+    useType: "exploration_mining",
+  },
 ];
 
 export const INIT_CONTRACTS: Contract[] = [
@@ -90,6 +116,7 @@ export const INIT_CONTRACTS: Contract[] = [
 ];
 
 export const REPORT2_ID = "2";
+export const REPORT3_ID = "3";
 
 export const INIT_REPORTS: ReportData[] = [
   {
@@ -123,6 +150,38 @@ export const INIT_REPORTS: ReportData[] = [
     aquiferDepthTop: 38,
     aquiferStaticLevel: 24,
     aquiferAllowableDrop: 38,
+  },
+  {
+    id: REPORT3_ID,
+    title: 'Разведочные работы с подсчётом запасов по объекту «Месторождение песка №6 с подъездной автодорогой на Средне-Назымском лицензионном участке»',
+    customerId: "3",
+    contractorId: "3",
+    licenseId: "3",
+    contractId: "",
+    responsible: "Маслов С.Н.",
+    secrecy: "нс",
+    place: "Сургут",
+    year: "2017",
+    govRegNumber: "71100-18-4302",
+    coContractors: [],
+    licenseNumber: "ХМН 03330 НЭ",
+    licenseDate: "13.02.2017",
+    licenseExpiry: "",
+    licensePdfUrl: "",
+    licensePdfName: "",
+    siteDescription: "Средне-Назымский лицензионный участок, Ханты-Мансийский район, ХМАО – Югра (песок для планировочных работ)",
+    coordLat: "",
+    coordLon: "",
+    depthLimit: null,
+    extractionVolumeDayCurrent: null,
+    extractionVolumeYearCurrent: null,
+    extractionVolumeDayPlan: null,
+    extractionVolumeYearPlan: null,
+    waterUseType: "",
+    aquiferName: "",
+    aquiferDepthTop: null,
+    aquiferStaticLevel: null,
+    aquiferAllowableDrop: null,
   },
 ];
 
@@ -439,4 +498,32 @@ export function seedReport2() {
     { id: "ga4", number: 4, title: "Конструкция скважины № 1914а", scale: "1:500" },
     { id: "ga5", number: 5, title: "График опытной откачки. Зависимость понижения от времени", scale: "—" },
   ]));
+}
+
+// ─── Seed: общие данные Отчёта 3 (Месторождение песка №6) ─────────────────────
+
+export function seedReport3() {
+  const labelKey = `geo_label_${REPORT3_ID}`;
+  if (localStorage.getItem(labelKey)) return; // уже засеяно
+
+  // Этикетка
+  localStorage.setItem(labelKey, JSON.stringify({
+    copyNumber: 1,
+    responsibleOverride: "Маслов С.Н.",
+    totalBooks: 1,
+    totalFolders: 1,
+    bookNumber: 1,
+    bookName: "Текст отчёта",
+  }));
+
+  // Титульный лист
+  localStorage.setItem(`geo_title_${REPORT3_ID}`, JSON.stringify({
+    approverPosition: "Заместитель генерального директора – директор ТПП «РИТЭКБелоярскнефть»",
+    approverName: "Р.Г. Нургалиев",
+    approverDate: "",
+    customerPosition: "Директор ООО «КАРЬЕР»",
+    customerName: "В.С. Зырянов",
+    customerDate: "",
+    responsibleOverride: "С.Н. Маслов",
+  }));
 }

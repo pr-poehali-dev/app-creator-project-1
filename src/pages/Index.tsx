@@ -9,7 +9,7 @@ import { AppSidebar, MobileTabs, ResetConfirmModal } from "./AppSidebar";
 import {
   type Section,
   INIT_CUSTOMERS, INIT_CONTRACTORS, INIT_LICENSES, INIT_CONTRACTS, INIT_REPORTS,
-  seedReport2,
+  seedReport2, seedReport3,
 } from "./initData";
 
 function useLocalStorage<T>(key: string, initial: T) {
@@ -32,8 +32,9 @@ function useLocalStorage<T>(key: string, initial: T) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Index() {
-  // Заполняем данные тестового отчёта 2 один раз при первом запуске
+  // Заполняем данные тестовых отчётов один раз при первом запуске
   seedReport2();
+  seedReport3();
 
   const [section, setSection] = useState<Section>("reports");
   const [openReportId, setOpenReportId] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export default function Index() {
     localStorage.setItem("geo_contracts",   JSON.stringify(INIT_CONTRACTS));
     localStorage.setItem("geo_reports",     JSON.stringify(INIT_REPORTS));
     seedReport2();
+    seedReport3();
     window.location.reload();
   };
 
