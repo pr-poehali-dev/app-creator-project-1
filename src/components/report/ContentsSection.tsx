@@ -18,12 +18,14 @@ export function buildContents(
   const label: LabelData | null       = load(`geo_label_${reportId}`);
   const title: TitlePageData | null   = load(`geo_title_${reportId}`);
   const abstract: AbstractData | null = load(`geo_abstract_${reportId}`);
-  const taskFile: TaskFile | null     = load(`geo_task_file_${reportId}`);
+  const rawTask = load(`geo_task_file_${reportId}`);
+  const taskFiles: TaskFile[] = Array.isArray(rawTask) ? rawTask : rawTask ? [rawTask] : [];
 
   const hasLabel    = !!(label?.bookName || label?.copyNumber);
   const hasTitle    = !!(title?.customerName || title?.customerPosition);
   const hasAbstract = !!(abstract?.abstractSubject || abstract?.keywords);
-  const hasTask     = !!taskFile?.filename;
+  const hasTask     = taskFiles.length > 0;
+  const taskNote    = taskFiles.length === 1 ? taskFiles[0].filename : taskFiles.length > 1 ? `${taskFiles.length} файлов` : undefined;
 
   const mainExecCount = (contractor?.executors?.length || 0) + (report.responsible ? 1 : 0);
   const coCount = (report.coContractors || []).reduce((s, cc) => {
@@ -72,7 +74,7 @@ export function buildContents(
 
   const arr = (v: unknown) => Array.isArray(v) ? v.length : 0;
 
-  entries.push({ id: "task_copy",          level: 0, title: "Копия геологического / технического задания",                page: "—", status: hasTask ? "file" : "empty", note: taskFile?.filename || undefined });
+  entries.push({ id: "task_copy",          level: 0, title: "Копия геологического / технического задания",                page: "—", status: hasTask ? "file" : "empty", note: taskNote });
   entries.push({ id: "contents",           level: 0, title: "Содержание",                                   page: "—", status: "filled" });
   entries.push({ id: "illustrations",      level: 0, title: "Список иллюстраций",                           page: "—", status: arr(illustrations) > 0 ? "filled" : "empty", note: arr(illustrations) > 0 ? `${arr(illustrations)} ил.` : "при наличии" });
   entries.push({ id: "tables",             level: 0, title: "Список таблиц в текстовой части",              page: "—", status: arr(tables) > 0 ? "filled" : "empty", note: arr(tables) > 0 ? `${arr(tables)} табл.` : "при наличии" });

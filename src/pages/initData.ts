@@ -556,4 +556,18 @@ export function seedReport3() {
     composerExecutorId: "e3",
     composerName: "С.Н. Маслов",
   }));
+
+  // Техническое задание (сканы оригинала, несколько страниц)
+  localStorage.setItem(`geo_task_file_${REPORT3_ID}`, JSON.stringify([
+    {
+      url: "https://cdn.poehali.dev/projects/40766bf5-3aa8-4d58-9da8-6e89d0d2914c/bucket/6d8a913e-639a-43c7-997a-19774fc62d02.png",
+      filename: "Техническое_задание_стр005.png",
+      uploadedAt: "2017-12-01T00:00:00.000Z",
+    },
+    {
+      url: "https://cdn.poehali.dev/projects/40766bf5-3aa8-4d58-9da8-6e89d0d2914c/bucket/7c59290d-5ff0-45ce-8bbb-33a5184a0531.png",
+      filename: "Техническое_задание_стр006.png",
+      uploadedAt: "2017-12-01T00:00:00.000Z",
+    },
+  ]));
 }

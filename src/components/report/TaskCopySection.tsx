@@ -6,6 +6,31 @@ import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
+// Нормализуем хранилище: поддержка старого формата (один объект) и нового (массив)
+function loadFiles(key: string): TaskFile[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(key) || "null");
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    return [raw]; // старый формат — одиночный объект
+  } catch {
+    return [];
+  }
+}
+
+const ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.gif,.tif,.tiff,application/pdf,image/*";
+
+function isImage(filename: string, contentType?: string): boolean {
+  if (contentType?.startsWith("image/")) return true;
+  return /\.(png|jpe?g|webp|gif|tiff?)$/i.test(filename);
+}
+
+function detectContentType(f: File): string {
+  if (f.type) return f.type;
+  if (f.name.toLowerCase().endsWith(".pdf")) return "application/pdf";
+  return "application/octet-stream";
+}
+
 export function TaskCopySection({ reportId, secrecy, responsible, contractor, contractors }: {
   reportId: string;
   secrecy: Secrecy;
@@ -14,51 +39,62 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
   contractors?: Contractor[];
 }) {
   const storageKey = `geo_task_file_${reportId}`;
-  const [file, setFile] = useState<TaskFile | null>(() => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "null"); } catch { return null; }
-  });
+  const [files, setFiles] = useState<TaskFile[]>(() => loadFiles(storageKey));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
-  const persist = (f: TaskFile | null) => {
-    setFile(f);
-    if (f) localStorage.setItem(storageKey, JSON.stringify(f));
+  const persist = (list: TaskFile[]) => {
+    setFiles(list);
+    if (list.length) localStorage.setItem(storageKey, JSON.stringify(list));
     else localStorage.removeItem(storageKey);
   };
 
-  const upload = async (f: File) => {
-    if (!f.type.includes("pdf") && !f.name.toLowerCase().endsWith(".pdf")) {
-      setError("Допускается только файл PDF");
-      return;
-    }
-    setUploading(true);
-    setError(null);
+  const uploadOne = (f: File) => new Promise<TaskFile | null>((resolve) => {
     const reader = new FileReader();
     reader.onload = async () => {
       const b64 = (reader.result as string).split(",")[1];
+      const contentType = detectContentType(f);
       const res = await fetch(UPLOAD_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file: b64, filename: f.name, contentType: "application/pdf", folder: "geo-tasks" }),
+        body: JSON.stringify({ file: b64, filename: f.name, contentType, folder: "geo-tasks" }),
       });
       const data = await res.json();
       if (data.url) {
-        persist({ url: data.url, filename: f.name, uploadedAt: new Date().toISOString() });
+        resolve({ url: data.url, filename: f.name, uploadedAt: new Date().toISOString() });
       } else {
-        setError("Ошибка загрузки файла");
+        resolve(null);
       }
-      setUploading(false);
     };
+    reader.onerror = () => resolve(null);
     reader.readAsDataURL(f);
+  });
+
+  const upload = async (fileList: FileList | File[]) => {
+    const arr = Array.from(fileList);
+    if (!arr.length) return;
+    setUploading(true);
+    setError(null);
+    const uploaded: TaskFile[] = [];
+    for (const f of arr) {
+      const result = await uploadOne(f);
+      if (result) uploaded.push(result);
+      else setError(`Ошибка загрузки файла: ${f.name}`);
+    }
+    if (uploaded.length) persist([...files, ...uploaded]);
+    setUploading(false);
+  };
+
+  const removeFile = (idx: number) => {
+    persist(files.filter((_, i) => i !== idx));
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    const f = e.dataTransfer.files[0];
-    if (f) upload(f);
+    if (e.dataTransfer.files.length) upload(e.dataTransfer.files);
   };
 
   return (
@@ -81,55 +117,61 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
         contractors={contractors}
       />
 
-      {!file ? (
-        <label onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}
-          className={`flex flex-col items-center justify-center gap-4 border-2 border-dashed px-8 py-16 cursor-pointer transition-colors ${dragOver ? "border-geo-amber bg-geo-amber/5" : "border-border hover:border-geo-amber/50 hover:bg-muted/30"}`}>
-          <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
-          {uploading ? (
-            <>
-              <Icon name="Loader" size={32} className="text-geo-amber animate-spin" />
-              <p className="font-mono text-sm text-muted-foreground">Загрузка файла...</p>
-            </>
-          ) : (
-            <>
-              <Icon name="FileUp" size={32} className="text-muted-foreground/40" />
-              <div className="text-center">
-                <p className="text-sm text-foreground font-medium">Перетащите PDF или нажмите для выбора</p>
-                <p className="text-xs text-muted-foreground font-mono mt-1">Только файлы .pdf</p>
+      {/* Список загруженных файлов */}
+      {files.length > 0 && (
+        <div className="space-y-2">
+          {files.map((file, idx) => {
+            const img = isImage(file.filename);
+            return (
+              <div key={idx} className="border border-border bg-card p-4 flex items-start gap-4">
+                {img ? (
+                  <button onClick={() => openPreview(file.url, file.filename)} className="flex-shrink-0 w-12 h-14 bg-muted/30 border border-border overflow-hidden">
+                    <img src={file.url} alt={file.filename} className="w-full h-full object-cover" />
+                  </button>
+                ) : (
+                  <div className="flex-shrink-0 w-12 h-14 bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+                    <Icon name="FileText" size={20} className="text-destructive/60" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{file.filename}</p>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Загружен {new Date(file.uploadedAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })}
+                  </p>
+                  <button onClick={() => openPreview(file.url, file.filename)} className="inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-2">
+                    <Icon name="Eye" size={12} /> Просмотр
+                  </button>
+                </div>
+                <button onClick={() => removeFile(idx)} className="p-2 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" title="Удалить файл">
+                  <Icon name="Trash2" size={15} />
+                </button>
               </div>
-            </>
-          )}
-        </label>
-      ) : (
-        <div className="border border-border bg-card p-6 space-y-5">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-12 h-14 bg-destructive/10 border border-destructive/20 flex items-center justify-center">
-              <Icon name="FileText" size={20} className="text-destructive/60" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{file.filename}</p>
-              <p className="text-xs text-muted-foreground font-mono mt-1">
-                Загружен {new Date(file.uploadedAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })}
-              </p>
-              <button onClick={() => openPreview(file.url, file.filename)} className="inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-2">
-                <Icon name="Eye" size={12} /> Просмотр
-              </button>
-            </div>
-            <button onClick={() => persist(null)} className="p-2 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" title="Удалить файл">
-              <Icon name="Trash2" size={15} />
-            </button>
-          </div>
-          <div className="border-t border-border/50 pt-4">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
-              <Icon name="RefreshCw" size={13} className="text-muted-foreground group-hover:text-geo-amber transition-colors" />
-              <span className="text-xs font-mono text-muted-foreground group-hover:text-geo-amber transition-colors">
-                {uploading ? "Загрузка..." : "Заменить файл"}
-              </span>
-            </label>
-          </div>
+            );
+          })}
         </div>
       )}
+
+      {/* Зона загрузки (всегда доступна — можно добавлять ещё) */}
+      <label onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}
+        className={`flex flex-col items-center justify-center gap-4 border-2 border-dashed px-8 py-12 cursor-pointer transition-colors ${dragOver ? "border-geo-amber bg-geo-amber/5" : "border-border hover:border-geo-amber/50 hover:bg-muted/30"}`}>
+        <input type="file" multiple accept={ACCEPT} className="hidden" onChange={(e) => { if (e.target.files) upload(e.target.files); e.target.value = ""; }} />
+        {uploading ? (
+          <>
+            <Icon name="Loader" size={32} className="text-geo-amber animate-spin" />
+            <p className="font-mono text-sm text-muted-foreground">Загрузка файлов...</p>
+          </>
+        ) : (
+          <>
+            <Icon name="FileUp" size={32} className="text-muted-foreground/40" />
+            <div className="text-center">
+              <p className="text-sm text-foreground font-medium">
+                {files.length > 0 ? "Добавить ещё файлы" : "Перетащите файлы или нажмите для выбора"}
+              </p>
+              <p className="text-xs text-muted-foreground font-mono mt-1">PDF, PNG, JPG, WEBP, TIFF · можно несколько</p>
+            </div>
+          </>
+        )}
+      </label>
 
       {error && (
         <div className="flex items-center gap-2 text-destructive text-xs font-mono border border-destructive/30 px-4 py-2">
@@ -145,18 +187,20 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
         <table className="w-full text-sm">
           <tbody>
             <tr className="border-b border-border/50">
-              <td className="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-widest w-48">Файл</td>
-              <td className="px-4 py-3 text-foreground">{file?.filename || "—"}</td>
-            </tr>
-            <tr className="border-b border-border/50">
-              <td className="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-widest">Дата загрузки</td>
-              <td className="px-4 py-3 text-foreground">{file ? new Date(file.uploadedAt).toLocaleDateString("ru-RU") : "—"}</td>
+              <td className="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-widest w-48">Кол-во файлов</td>
+              <td className="px-4 py-3 text-foreground">{files.length || "—"}</td>
             </tr>
             <tr>
-              <td className="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-widest">URL</td>
+              <td className="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-widest align-top">Файлы</td>
               <td className="px-4 py-3">
-                {file ? (
-                  <button onClick={() => openPreview(file.url, file.filename)} className="text-xs font-mono text-geo-amber hover:underline truncate block max-w-xs text-left">{file.url}</button>
+                {files.length ? (
+                  <div className="space-y-1">
+                    {files.map((file, idx) => (
+                      <button key={idx} onClick={() => openPreview(file.url, file.filename)} className="text-xs font-mono text-geo-amber hover:underline truncate block max-w-md text-left">
+                        {file.filename}
+                      </button>
+                    ))}
+                  </div>
                 ) : "—"}
               </td>
             </tr>
