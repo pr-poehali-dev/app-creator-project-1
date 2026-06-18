@@ -248,6 +248,20 @@ export interface MainImage {
   uploadedAt: string;
 }
 
+export interface TableCell {
+  content: string;
+  bold?: boolean;
+  italic?: boolean;
+  align?: "left" | "center" | "right";
+  colspan?: number;
+  rowspan?: number;
+  isHeader?: boolean;
+}
+
+export interface TableData {
+  rows: TableCell[][];
+}
+
 export interface MainBlock {
   id: string;
   type: MainBlockType;
@@ -255,6 +269,7 @@ export interface MainBlock {
   image?: MainImage;
   tableCaption?: string;
   tableContent?: string;
+  tableData?: TableData;
   appendixRef?: AppendixRef;
 }
 

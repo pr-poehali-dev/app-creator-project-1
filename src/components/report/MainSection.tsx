@@ -6,6 +6,7 @@ import type {
   TableEntry, TextAppendix, GraphicAppendix,
 } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
+import { TableBlockEditor, TablePreview, makeTable } from "./TableBlockEditor";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -203,20 +204,48 @@ function ImageBlockEl({ block, onChange, reportId, ...actions }: { block: MainBl
 }
 
 function TableBlockEl({ block, onChange, ...actions }: { block: MainBlock; onChange: (b: MainBlock) => void } & Parameters<typeof BlockActions>[0]) {
+  const [editing, setEditing] = useState(!block.tableData);
+
+  // Migrate: если tableData нет, но есть tableContent — предлагаем редактор
+  const data = block.tableData ?? makeTable(3, 3);
+
   return (
     <div className="group flex items-start gap-2">
-      <div className="flex-1 border border-border bg-muted/10 p-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <Icon name="Table2" size={13} className="text-geo-amber/60 flex-shrink-0" />
-          <input type="text" value={block.tableCaption ?? ""} onChange={(e) => onChange({ ...block, tableCaption: e.target.value })}
-            placeholder="Название таблицы..." className="flex-1 bg-transparent border-b border-border/50 focus:border-geo-amber outline-none text-sm font-medium text-foreground py-0.5 placeholder:text-muted-foreground/30 transition-colors" />
+      <div className="flex-1 space-y-0 overflow-hidden">
+        {editing ? (
+          <TableBlockEditor
+            caption={block.tableCaption ?? ""}
+            data={data}
+            onCaptionChange={(v) => onChange({ ...block, tableCaption: v })}
+            onDataChange={(d) => onChange({ ...block, tableData: d, tableContent: undefined })}
+          />
+        ) : (
+          <div
+            className="border border-border cursor-pointer hover:border-geo-amber/40 transition-colors"
+            onClick={() => setEditing(true)}
+            title="Нажмите для редактирования"
+          >
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b border-border">
+              <Icon name="Table2" size={13} className="text-geo-amber/60 flex-shrink-0" />
+              <span className="text-sm font-medium text-foreground flex-1 truncate">
+                {block.tableCaption || <span className="text-muted-foreground/40 italic">Без названия</span>}
+              </span>
+              <Icon name="Pencil" size={11} className="text-muted-foreground/40 flex-shrink-0" />
+            </div>
+            <div className="p-2">
+              <TablePreview data={data} />
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2 px-2 py-1 bg-muted/10 border border-t-0 border-border">
+          <button
+            onClick={() => setEditing((v) => !v)}
+            className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber transition-colors"
+          >
+            <Icon name={editing ? "EyeOff" : "Pencil"} size={11} />
+            {editing ? "Свернуть" : "Редактировать"}
+          </button>
         </div>
-        <textarea value={block.tableContent ?? ""} onChange={(e) => {
-          onChange({ ...block, tableContent: e.target.value });
-          const t = e.target; t.style.height = "auto"; t.style.height = t.scrollHeight + "px";
-        }}
-          placeholder="Содержимое / описание таблицы..." rows={3}
-          className="w-full bg-muted/40 border border-border px-3 py-2 text-xs text-foreground/80 placeholder:text-muted-foreground/30 focus:outline-none focus:border-geo-amber transition-colors resize-none font-mono" />
       </div>
       <BlockActions {...actions} />
     </div>
@@ -264,7 +293,11 @@ function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirs
 
   const addBlock = (type: MainBlock["type"]) => {
     const id = newId();
-    const block: MainBlock = { id, type };
+    const block: MainBlock = {
+      id,
+      type,
+      ...(type === "table" ? { tableData: makeTable(3, 3), tableCaption: "" } : {}),
+    };
     if (type === "appendix_ref") { setPickerBlockId(id); }
     onChange({ ...section, blocks: [...section.blocks, block] });
   };

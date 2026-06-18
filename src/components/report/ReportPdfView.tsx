@@ -359,9 +359,42 @@ function PdfTextPart({ d }: { d: PdfData }) {
               </div>
             );
             if (b.type === "table") return (
-              <div key={b.id} style={{ margin: "12px 0", padding: "8px", backgroundColor: "#f9f9f9", border: "1px solid #ddd" }}>
-                {b.tableCaption && <div style={{ fontWeight: "bold", marginBottom: "4px", fontSize: "10pt" }}>{b.tableCaption}</div>}
-                <div style={{ fontSize: "10pt", whiteSpace: "pre-wrap" }}>{b.tableContent}</div>
+              <div key={b.id} style={{ margin: "16px 0" }}>
+                {b.tableCaption && (
+                  <div style={{ fontWeight: "bold", marginBottom: "6px", fontSize: "10pt" }}>
+                    {b.tableCaption}
+                  </div>
+                )}
+                {b.tableData ? (
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10pt" }}>
+                    <tbody>
+                      {b.tableData.rows.map((row, ri) => (
+                        <tr key={ri}>
+                          {row.map((cell, ci) => {
+                            const Tag = cell.isHeader ? "th" : "td";
+                            return (
+                              <Tag key={ci} style={{
+                                border: "1px solid #ccc",
+                                padding: "4px 8px",
+                                backgroundColor: cell.isHeader ? "#f0f0f0" : "#fff",
+                                fontWeight: cell.bold || cell.isHeader ? "bold" : "normal",
+                                fontStyle: cell.italic ? "italic" : "normal",
+                                textAlign: cell.align ?? (cell.isHeader ? "center" : "left"),
+                                verticalAlign: "top",
+                              }}>
+                                {cell.content || ""}
+                              </Tag>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : b.tableContent ? (
+                  <div style={{ fontSize: "10pt", whiteSpace: "pre-wrap", border: "1px solid #ddd", padding: "8px" }}>
+                    {b.tableContent}
+                  </div>
+                ) : null}
               </div>
             );
             return null;
