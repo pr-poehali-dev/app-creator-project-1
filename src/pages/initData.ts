@@ -209,9 +209,16 @@ export const INIT_REPORTS: ReportData[] = [
 
 // ─── Seed: заполняем секции Отчёта 2 при первом запуске ───────────────────────
 
+// Версия seed-данных. Увеличивайте при изменении содержимого seedReportX,
+// чтобы данные перезаписались у пользователей со старым localStorage.
+export const SEED_VERSION = 2;
+
 export function seedReport2() {
+  const verKey = `geo_seed_version_${REPORT2_ID}`;
+  const ver = Number(localStorage.getItem(verKey) || "0");
+  if (ver >= SEED_VERSION) return; // уже засеяно актуальной версией
+  localStorage.setItem(verKey, String(SEED_VERSION));
   const labelKey = `geo_label_${REPORT2_ID}`;
-  if (localStorage.getItem(labelKey)) return; // уже засеяно
 
   // Этикетка
   localStorage.setItem(labelKey, JSON.stringify({
@@ -525,8 +532,11 @@ export function seedReport2() {
 // ─── Seed: общие данные Отчёта 3 (Месторождение песка №6) ─────────────────────
 
 export function seedReport3() {
+  const verKey = `geo_seed_version_${REPORT3_ID}`;
+  const ver = Number(localStorage.getItem(verKey) || "0");
+  if (ver >= SEED_VERSION) return; // уже засеяно актуальной версией
+  localStorage.setItem(verKey, String(SEED_VERSION));
   const labelKey = `geo_label_${REPORT3_ID}`;
-  if (localStorage.getItem(labelKey)) return; // уже засеяно
 
   // Этикетка
   localStorage.setItem(labelKey, JSON.stringify({
