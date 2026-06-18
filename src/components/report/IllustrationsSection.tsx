@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { Illustration } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
+import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 // ─── IllustrationsSection ─────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
   const emptyForm = { title: "", textPage: "", url: "", filename: "", uploadedAt: "" };
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { openPreview, modal: previewModal } = usePdfPreview();
 
   const nextNumber = items.length > 0 ? Math.max(...items.map((i) => i.number)) + 1 : 1;
 
@@ -122,6 +124,7 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
 
   return (
     <div className="animate-fade-in space-y-6">
+      {previewModal}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-1">
@@ -181,17 +184,30 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
                 <tr key={item.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors group">
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground/60">{String(item.number).padStart(2, "0")}</td>
                   <td className="px-4 py-3">
-                    <a href={item.url} target="_blank" rel="noopener noreferrer">
+                    <button
+                      onClick={() => openPreview(item.url, item.filename)}
+                      className="group/thumb relative block"
+                      title="Нажмите для просмотра"
+                    >
                       <img
                         src={item.url}
                         alt={item.title}
-                        className="w-14 h-10 object-cover border border-border hover:border-geo-amber transition-colors"
+                        className="w-14 h-10 object-cover border border-border group-hover/thumb:border-geo-amber transition-colors"
                       />
-                    </a>
+                      <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/40 transition-colors flex items-center justify-center">
+                        <Icon name="ZoomIn" size={14} className="text-white opacity-0 group-hover/thumb:opacity-100 transition-opacity" />
+                      </div>
+                    </button>
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm text-foreground font-medium leading-snug">{item.title}</p>
                     <p className="text-xs text-muted-foreground/50 font-mono mt-0.5 truncate max-w-xs">{item.filename}</p>
+                    <button
+                      onClick={() => openPreview(item.url, item.filename)}
+                      className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-1"
+                    >
+                      <Icon name="ZoomIn" size={11} /> Просмотр
+                    </button>
                   </td>
                   <td className="px-4 py-3">
                     {item.textPage ? (
@@ -221,17 +237,20 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
       {items.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {items.map((item) => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className="group relative block">
+            <button key={item.id} onClick={() => openPreview(item.url, item.filename)} className="group relative block text-left w-full">
               <img
                 src={item.url}
                 alt={item.title}
                 className="w-full h-28 object-cover border border-border group-hover:border-geo-amber transition-colors"
               />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                <Icon name="ZoomIn" size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+              </div>
               <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm px-2 py-1">
                 <p className="font-mono text-xs text-geo-amber">Рис. {item.number}</p>
                 <p className="text-xs text-foreground/80 truncate leading-tight">{item.title}</p>
               </div>
-            </a>
+            </button>
           ))}
         </div>
       )}
