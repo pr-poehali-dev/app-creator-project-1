@@ -118,6 +118,28 @@ export const INIT_CONTRACTS: Contract[] = [
 export const REPORT2_ID = "2";
 export const REPORT3_ID = "3";
 
+/**
+ * Добавляет в сохранённый список отчётов те seed-отчёты, которых там ещё нет.
+ * Нужно, чтобы новые тестовые отчёты появлялись у пользователей,
+ * у которых geo_reports уже сохранён со старым набором.
+ */
+export function mergeSeedReports() {
+  try {
+    const stored = localStorage.getItem("geo_reports");
+    const list: ReportData[] = stored ? JSON.parse(stored) : [];
+    const existingIds = new Set(list.map((r) => r.id));
+    const merged = [...list];
+    for (const seed of INIT_REPORTS) {
+      if (!existingIds.has(seed.id)) merged.push(seed);
+    }
+    if (merged.length !== list.length || !stored) {
+      localStorage.setItem("geo_reports", JSON.stringify(merged));
+    }
+  } catch {
+    localStorage.setItem("geo_reports", JSON.stringify(INIT_REPORTS));
+  }
+}
+
 export const INIT_REPORTS: ReportData[] = [
   {
     id: REPORT2_ID,

@@ -9,7 +9,7 @@ import { AppSidebar, MobileTabs, ResetConfirmModal } from "./AppSidebar";
 import {
   type Section,
   INIT_CUSTOMERS, INIT_CONTRACTORS, INIT_LICENSES, INIT_CONTRACTS, INIT_REPORTS,
-  seedReport2, seedReport3,
+  seedReport2, seedReport3, mergeSeedReports,
 } from "./initData";
 
 function useLocalStorage<T>(key: string, initial: T) {
@@ -35,6 +35,8 @@ export default function Index() {
   // Заполняем данные тестовых отчётов один раз при первом запуске
   seedReport2();
   seedReport3();
+  // Добавляем недостающие seed-отчёты в сохранённый список (для уже опубликованных версий)
+  mergeSeedReports();
 
   const [section, setSection] = useState<Section>("reports");
   const [openReportId, setOpenReportId] = useState<string | null>(null);
