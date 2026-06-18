@@ -73,8 +73,8 @@ export const INIT_CONTRACTORS: Contractor[] = [
     chiefGeologist: "Маслов С.Н.",
     responsible: "Маслов С.Н.",
     executors: [
-      { id: "e3", lastName: "Маслов", initials: "С.Н.", position: "Маркшейдер", degree: "" },
-      { id: "e4", lastName: "Зырянов", initials: "В.С.", position: "Директор", degree: "" },
+      { id: "e3", lastName: "Маслов", initials: "С.Н.", position: "Отв. исполнитель, маркшейдер, начальник отдела", degree: "" },
+      { id: "e4", lastName: "Ефимиади", initials: "Е.С.", position: "Нормоконтролёр", degree: "" },
     ],
   },
 ];
