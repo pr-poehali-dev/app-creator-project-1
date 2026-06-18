@@ -35,7 +35,7 @@ export function LicensesSection({
 
   const save = () => {
     if (modal === "add") {
-      setLicenses((prev) => [...prev, { ...form, id: Date.now().toString() }]);
+      setLicenses((prev) => [...prev, { ...form, id: Date.now().toString() + Math.random().toString(36).slice(2, 6) }]);
     } else if (modal && typeof modal === "object") {
       setLicenses((prev) => prev.map((l) => (l.id === (modal as License).id ? { ...(modal as License), ...form } : l)));
     }
@@ -150,7 +150,7 @@ export function ContractsSection({
 
   const save = () => {
     if (modal === "add") {
-      setContracts((prev) => [...prev, { ...form, id: Date.now().toString() }]);
+      setContracts((prev) => [...prev, { ...form, id: Date.now().toString() + Math.random().toString(36).slice(2, 6) }]);
     } else if (modal && typeof modal === "object") {
       setContracts((prev) => prev.map((c) => (c.id === (modal as Contract).id ? { ...(modal as Contract), ...form } : c)));
     }

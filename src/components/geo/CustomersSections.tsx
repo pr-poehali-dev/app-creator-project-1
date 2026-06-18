@@ -23,7 +23,7 @@ export function ExecutorsList({ contractor, setContractors }: {
 
   const saveExec = () => {
     if (execModal === "add") {
-      patchExecutors([...(contractor.executors || []), { ...execForm, id: Date.now().toString() }]);
+      patchExecutors([...(contractor.executors || []), { ...execForm, id: Date.now().toString() + Math.random().toString(36).slice(2, 6) }]);
     } else if (execModal && typeof execModal === "object") {
       patchExecutors((contractor.executors || []).map((e) => e.id === (execModal as Executor).id ? { ...(execModal as Executor), ...execForm } : e));
     }
@@ -123,7 +123,7 @@ export function CustomersSection({
 
   const save = () => {
     if (modal === "add") {
-      setCustomers((prev) => [...prev, { ...form, id: Date.now().toString() }]);
+      setCustomers((prev) => [...prev, { ...form, id: Date.now().toString() + Math.random().toString(36).slice(2, 6) }]);
     } else if (modal && typeof modal === "object") {
       setCustomers((prev) => prev.map((c) => (c.id === (modal as Customer).id ? { ...(modal as Customer), ...form } : c)));
     }
@@ -215,7 +215,7 @@ export function ContractorsSection({
 
   const save = () => {
     if (modal === "add") {
-      setContractors((prev) => [...prev, { ...form, id: Date.now().toString() }]);
+      setContractors((prev) => [...prev, { ...form, id: Date.now().toString() + Math.random().toString(36).slice(2, 6) }]);
     } else if (modal && typeof modal === "object") {
       setContractors((prev) => prev.map((c) => (c.id === (modal as Contractor).id ? { ...(modal as Contractor), ...form } : c)));
     }

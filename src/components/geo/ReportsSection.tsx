@@ -115,7 +115,7 @@ export function ReportsSection({
 
   const save = () => {
     if (modal === "add") {
-      setReports((prev) => [...prev, { ...form, id: Date.now().toString() }]);
+      setReports((prev) => [...prev, { ...form, id: Date.now().toString() + Math.random().toString(36).slice(2, 6) }]);
     } else if (modal && typeof modal === "object") {
       setReports((prev) =>
         prev.map((r) => (r.id === (modal as ReportData).id ? { ...(modal as ReportData), ...form } : r))
@@ -125,6 +125,11 @@ export function ReportsSection({
   };
 
   const remove = (id: string) => {
+    // Удаляем связанные данные отчёта из localStorage (этикетка, титул, реферат,
+    // текстовая часть, таблицы, приложения и т.д.), чтобы не оставлять «сирот»
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("geo_") && k.endsWith(`_${id}`))
+      .forEach((k) => localStorage.removeItem(k));
     setReports((prev) => prev.filter((r) => r.id !== id));
     setDeleteId(null);
   };
@@ -155,7 +160,8 @@ export function ReportsSection({
       </div>
 
       {viewId && (() => {
-        const r = reports.find((x) => x.id === viewId)!;
+        const r = reports.find((x) => x.id === viewId);
+        if (!r) return null;
         return (
           <ReportViewModal
             report={r}
