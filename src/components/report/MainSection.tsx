@@ -7,6 +7,7 @@ import type {
 } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { TableBlockEditor, TablePreview, makeTable } from "./TableBlockEditor";
+import { syncAllFromText } from "./syncFromText";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -381,7 +382,11 @@ export function MainTextSection({ reportId }: { reportId: string }) {
 
   const [sections, setSections] = useState<MainSection[]>(load);
 
-  const update = (next: MainSection[]) => { setSections(next); persist(next); };
+  const update = (next: MainSection[]) => {
+    setSections(next);
+    persist(next);
+    syncAllFromText(reportId, next);
+  };
 
   const addSection = (level: 1 | 2) => {
     update([...sections, { id: newId(), level, title: "", blocks: [] }]);

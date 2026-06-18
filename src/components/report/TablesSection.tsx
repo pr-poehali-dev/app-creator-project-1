@@ -4,6 +4,7 @@ import type { TableEntry } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
+import type { SyncedTableEntry } from "./syncFromText";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 const FILE_ICON: Record<string, string> = {
@@ -33,13 +34,16 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
 }) {
   const storageKey = `geo_tables_${reportId}`;
 
-  const load = (): TableEntry[] => {
+  const load = (): SyncedTableEntry[] => {
     try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
   };
-  const persist = (items: TableEntry[]) => localStorage.setItem(storageKey, JSON.stringify(items));
+  const persist = (items: SyncedTableEntry[]) => localStorage.setItem(storageKey, JSON.stringify(items));
 
-  const [items, setItems] = useState<TableEntry[]>(load);
-  const [modal, setModal] = useState<null | "add" | TableEntry>(null);
+  const [items, setItems] = useState<SyncedTableEntry[]>(load);
+  // Обновляем данные из localStorage (синхронизация из текста происходит в MainSection)
+  const refresh = () => setItems(load());
+
+  const [modal, setModal] = useState<null | "add" | SyncedTableEntry>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [form, setForm] = useState({ title: "", textPage: "", fileUrl: "", filename: "", fileType: "" as TableEntry["fileType"] | "", uploadedAt: "" });
@@ -151,10 +155,28 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
         <span className="font-mono text-xs text-geo-amber/80">Нумерация присваивается автоматически · файл (PDF/Excel) необязателен · страница будет связана с текстом позже</span>
       </div>
 
+      {/* Sync info */}
+      {items.some((i) => (i as SyncedTableEntry).source === "text") && (
+        <div className="border border-geo-amber/20 bg-geo-amber/5 px-4 py-2.5 flex items-center gap-3">
+          <Icon name="Link2" size={13} className="text-geo-amber/60 flex-shrink-0" />
+          <span className="font-mono text-xs text-geo-amber/70 flex-1">
+            Часть таблиц синхронизирована из текстовой части · редактируйте там, изменения отразятся здесь автоматически
+          </span>
+          <button onClick={refresh} className="flex items-center gap-1 text-xs font-mono text-geo-amber/60 hover:text-geo-amber transition-colors flex-shrink-0">
+            <Icon name="RefreshCw" size={11} /> Обновить
+          </button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center justify-between">
         <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
           Таблиц: <span className="text-geo-amber">{String(items.length).padStart(2, "0")}</span>
+          {items.filter((i) => (i as SyncedTableEntry).source === "text").length > 0 && (
+            <span className="ml-2 text-muted-foreground/40">
+              ({items.filter((i) => (i as SyncedTableEntry).source === "text").length} из текста)
+            </span>
+          )}
         </span>
         <button onClick={openAdd} className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
           <Icon name="Plus" size={14} /> Добавить таблицу
@@ -187,6 +209,11 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm text-foreground font-medium leading-snug">{item.title}</p>
+                    {(item as SyncedTableEntry).source === "text" && (
+                      <span className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber/60 mt-0.5">
+                        <Icon name="Link2" size={10} /> из текста
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {item.fileUrl ? (

@@ -4,6 +4,7 @@ import type { Illustration } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
+import type { SyncedIllustration } from "./syncFromText";
 import type { Secrecy, Contractor } from "@/types/geo";
 
 // ─── IllustrationsSection ─────────────────────────────────────────────────────
@@ -19,15 +20,16 @@ interface IllustrationsSectionProps {
 export function IllustrationsSection({ reportId, secrecy, responsible, contractor, contractors }: IllustrationsSectionProps) {
   const storageKey = `geo_illustrations_${reportId}`;
 
-  const load = (): Illustration[] => {
+  const load = (): SyncedIllustration[] => {
     try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
   };
-  const save = (items: Illustration[]) => {
+  const save = (items: SyncedIllustration[]) => {
     localStorage.setItem(storageKey, JSON.stringify(items));
   };
 
-  const [items, setItems] = useState<Illustration[]>(load);
-  const [modal, setModal] = useState<null | "add" | Illustration>(null);
+  const [items, setItems] = useState<SyncedIllustration[]>(load);
+  const refresh = () => setItems(load());
+  const [modal, setModal] = useState<null | "add" | SyncedIllustration>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -148,10 +150,28 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
         <span className="font-mono text-xs text-geo-amber/80">Нумерация присваивается автоматически · страница будет связана с текстовой частью позже</span>
       </div>
 
+      {/* Sync info */}
+      {items.some((i) => (i as SyncedIllustration).source === "text") && (
+        <div className="border border-geo-amber/20 bg-geo-amber/5 px-4 py-2.5 flex items-center gap-3">
+          <Icon name="Link2" size={13} className="text-geo-amber/60 flex-shrink-0" />
+          <span className="font-mono text-xs text-geo-amber/70 flex-1">
+            Часть иллюстраций синхронизирована из текстовой части · редактируйте там, изменения отразятся здесь автоматически
+          </span>
+          <button onClick={refresh} className="flex items-center gap-1 text-xs font-mono text-geo-amber/60 hover:text-geo-amber transition-colors flex-shrink-0">
+            <Icon name="RefreshCw" size={11} /> Обновить
+          </button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center justify-between">
         <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
           Иллюстраций: <span className="text-geo-amber">{String(items.length).padStart(2, "0")}</span>
+          {items.filter((i) => (i as SyncedIllustration).source === "text").length > 0 && (
+            <span className="ml-2 text-muted-foreground/40">
+              ({items.filter((i) => (i as SyncedIllustration).source === "text").length} из текста)
+            </span>
+          )}
         </span>
         <button
           onClick={openAdd}
@@ -202,12 +222,19 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
                   <td className="px-4 py-3">
                     <p className="text-sm text-foreground font-medium leading-snug">{item.title}</p>
                     <p className="text-xs text-muted-foreground/50 font-mono mt-0.5 truncate max-w-xs">{item.filename}</p>
-                    <button
-                      onClick={() => openPreview(item.url, item.filename)}
-                      className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-1"
-                    >
-                      <Icon name="ZoomIn" size={11} /> Просмотр
-                    </button>
+                    <div className="flex items-center gap-3 mt-1">
+                      <button
+                        onClick={() => openPreview(item.url, item.filename)}
+                        className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors"
+                      >
+                        <Icon name="ZoomIn" size={11} /> Просмотр
+                      </button>
+                      {(item as SyncedIllustration).source === "text" && (
+                        <span className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber/60">
+                          <Icon name="Link2" size={10} /> из текста
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     {item.textPage ? (
