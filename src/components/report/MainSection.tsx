@@ -9,6 +9,24 @@ import { UPLOAD_URL } from "./reportTypes";
 import { TableBlockEditor, TablePreview, makeTable } from "./TableBlockEditor";
 import { syncAllFromText } from "./syncFromText";
 
+// ─── Вычисляет карту blockId → порядковый номер (для таблиц и иллюстраций) ──
+
+type BlockNumberMap = Record<string, number>;
+
+function buildBlockNumbers(sections: MainSection[]): { tables: BlockNumberMap; images: BlockNumberMap } {
+  const tables: BlockNumberMap = {};
+  const images: BlockNumberMap = {};
+  let tNum = 0;
+  let iNum = 0;
+  for (const section of sections) {
+    for (const block of section.blocks) {
+      if (block.type === "table") { tNum++; tables[block.id] = tNum; }
+      if (block.type === "image" && block.image?.url) { iNum++; images[block.id] = iNum; }
+    }
+  }
+  return { tables, images };
+}
+
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 function newId() { return Date.now().toString() + Math.random().toString(36).slice(2, 6); }
@@ -151,7 +169,7 @@ function TextBlockEl({ block, onChange, ...actions }: { block: MainBlock; onChan
   );
 }
 
-function ImageBlockEl({ block, onChange, reportId, ...actions }: { block: MainBlock; onChange: (b: MainBlock) => void; reportId: string } & Parameters<typeof BlockActions>[0]) {
+function ImageBlockEl({ block, onChange, reportId, imageNum, ...actions }: { block: MainBlock; onChange: (b: MainBlock) => void; reportId: string; imageNum?: number } & Parameters<typeof BlockActions>[0]) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const img = block.image;
@@ -193,7 +211,13 @@ function ImageBlockEl({ block, onChange, reportId, ...actions }: { block: MainBl
             </label>
           </div>
         )}
+        {/* Номер рисунка + подпись */}
         <div className="flex items-center gap-2">
+          {imageNum != null && (
+            <span className="font-mono text-xs text-geo-amber font-semibold flex-shrink-0 border border-geo-amber/30 bg-geo-amber/5 px-1.5 py-0.5">
+              Рис. {imageNum}
+            </span>
+          )}
           <span className="text-xs font-mono text-muted-foreground/50 flex-shrink-0">Подпись:</span>
           <input type="text" value={img?.caption ?? ""} onChange={(e) => onChange({ ...block, image: { ...(img ?? { id: newId(), url: "", filename: "", uploadedAt: "" }), caption: e.target.value } })}
             placeholder="Название рисунка..." className="flex-1 bg-transparent border-b border-border/50 focus:border-geo-amber outline-none text-xs text-foreground py-0.5 placeholder:text-muted-foreground/30 transition-colors" />
@@ -204,15 +228,27 @@ function ImageBlockEl({ block, onChange, reportId, ...actions }: { block: MainBl
   );
 }
 
-function TableBlockEl({ block, onChange, ...actions }: { block: MainBlock; onChange: (b: MainBlock) => void } & Parameters<typeof BlockActions>[0]) {
+function TableBlockEl({ block, onChange, tableNum, ...actions }: { block: MainBlock; onChange: (b: MainBlock) => void; tableNum?: number } & Parameters<typeof BlockActions>[0]) {
   const [editing, setEditing] = useState(!block.tableData);
 
-  // Migrate: если tableData нет, но есть tableContent — предлагаем редактор
   const data = block.tableData ?? makeTable(3, 3);
+  const label = tableNum != null
+    ? `Таблица ${tableNum}${block.tableCaption ? ` — ${block.tableCaption}` : ""}`
+    : block.tableCaption || null;
 
   return (
     <div className="group flex items-start gap-2">
       <div className="flex-1 space-y-0 overflow-hidden">
+        {/* Номер таблицы */}
+        {tableNum != null && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-geo-amber/5 border border-b-0 border-geo-amber/20">
+            <Icon name="Hash" size={11} className="text-geo-amber/60 flex-shrink-0" />
+            <span className="font-mono text-xs text-geo-amber font-semibold">Таблица {tableNum}</span>
+            {block.tableCaption && (
+              <span className="text-xs text-muted-foreground/60 truncate">— {block.tableCaption}</span>
+            )}
+          </div>
+        )}
         {editing ? (
           <TableBlockEditor
             caption={block.tableCaption ?? ""}
@@ -229,7 +265,7 @@ function TableBlockEl({ block, onChange, ...actions }: { block: MainBlock; onCha
             <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b border-border">
               <Icon name="Table2" size={13} className="text-geo-amber/60 flex-shrink-0" />
               <span className="text-sm font-medium text-foreground flex-1 truncate">
-                {block.tableCaption || <span className="text-muted-foreground/40 italic">Без названия</span>}
+                {label || <span className="text-muted-foreground/40 italic">Без названия</span>}
               </span>
               <Icon name="Pencil" size={11} className="text-muted-foreground/40 flex-shrink-0" />
             </div>
@@ -270,7 +306,7 @@ function AppendixRefEl({ block, onDelete, ...actions }: { block: MainBlock; onDe
 
 // ─── SectionCard ──────────────────────────────────────────────────────────────
 
-function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast, reportId, sectionNum }: {
+function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast, reportId, sectionNum, blockNumbers }: {
   section: MainSection;
   onChange: (s: MainSection) => void;
   onDelete: () => void;
@@ -280,6 +316,7 @@ function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirs
   isLast: boolean;
   reportId: string;
   sectionNum: string;
+  blockNumbers: { tables: BlockNumberMap; images: BlockNumberMap };
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [pickerBlockId, setPickerBlockId] = useState<string | null>(null);
@@ -347,8 +384,8 @@ function SectionCard({ section, onChange, onDelete, onMoveUp, onMoveDown, isFirs
               onDelete: () => deleteBlock(block.id),
             };
             if (block.type === "text") return <TextBlockEl key={block.id} block={block} onChange={(b) => updateBlock(block.id, b)} {...blockProps} />;
-            if (block.type === "image") return <ImageBlockEl key={block.id} block={block} onChange={(b) => updateBlock(block.id, b)} reportId={reportId} {...blockProps} />;
-            if (block.type === "table") return <TableBlockEl key={block.id} block={block} onChange={(b) => updateBlock(block.id, b)} {...blockProps} />;
+            if (block.type === "image") return <ImageBlockEl key={block.id} block={block} onChange={(b) => updateBlock(block.id, b)} reportId={reportId} imageNum={blockNumbers.images[block.id]} {...blockProps} />;
+            if (block.type === "table") return <TableBlockEl key={block.id} block={block} onChange={(b) => updateBlock(block.id, b)} tableNum={blockNumbers.tables[block.id]} {...blockProps} />;
             if (block.type === "appendix_ref") return <AppendixRefEl key={block.id} block={block} {...blockProps} />;
             return null;
           })}
@@ -399,6 +436,9 @@ export function MainTextSection({ reportId }: { reportId: string }) {
     [next[idx], next[idx + dir]] = [next[idx + dir], next[idx]];
     update(next);
   };
+
+  // Номера таблиц и иллюстраций по blockId (пересчитываются при каждом изменении)
+  const blockNumbers = buildBlockNumbers(sections);
 
   // Нумерация: разделы начиная с 2 (Введение = 1), подразделы X.1, X.2...
   const sectionNumbers = (() => {
@@ -458,6 +498,7 @@ export function MainTextSection({ reportId }: { reportId: string }) {
               isLast={idx === sections.length - 1}
               reportId={reportId}
               sectionNum={sectionNumbers[idx]}
+              blockNumbers={blockNumbers}
             />
           ))}
 
