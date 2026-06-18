@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import Icon from "@/components/ui/icon";
 import type { IntroBlock, IntroImage } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
+import { TableBlockEditor, TablePreview, makeTable } from "./TableBlockEditor";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -182,6 +183,62 @@ function ImageBlock({ block, onChange, onDelete, onMoveUp, onMoveDown, isFirst, 
   );
 }
 
+function TableBlock({ block, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast }: {
+  block: IntroBlock;
+  onChange: (b: IntroBlock) => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
+}) {
+  const [editing, setEditing] = useState(!block.tableData);
+  const data = block.tableData ?? makeTable(3, 3);
+  const label = block.tableCaption || null;
+
+  return (
+    <div className="group flex items-start gap-2">
+      <div className="flex-1 space-y-0 overflow-hidden">
+        {editing ? (
+          <TableBlockEditor
+            caption={block.tableCaption ?? ""}
+            data={data}
+            onCaptionChange={(v) => onChange({ ...block, tableCaption: v })}
+            onDataChange={(d) => onChange({ ...block, tableData: d })}
+          />
+        ) : (
+          <div
+            className="border border-border cursor-pointer hover:border-geo-amber/40 transition-colors"
+            onClick={() => setEditing(true)}
+            title="Нажмите для редактирования"
+          >
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b border-border">
+              <Icon name="Table2" size={13} className="text-geo-amber/60 flex-shrink-0" />
+              <span className="text-sm font-medium text-foreground flex-1 truncate">
+                {label || <span className="text-muted-foreground/40 italic">Без названия</span>}
+              </span>
+              <Icon name="Pencil" size={11} className="text-muted-foreground/40 flex-shrink-0" />
+            </div>
+            <div className="p-2">
+              <TablePreview data={data} />
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2 px-2 py-1 bg-muted/10 border border-t-0 border-border">
+          <button
+            onClick={() => setEditing((v) => !v)}
+            className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber transition-colors"
+          >
+            <Icon name={editing ? "EyeOff" : "Pencil"} size={11} />
+            {editing ? "Свернуть" : "Редактировать"}
+          </button>
+        </div>
+      </div>
+      <BlockActions isFirst={isFirst} isLast={isLast} onMoveUp={onMoveUp} onMoveDown={onMoveDown} onDelete={onDelete} />
+    </div>
+  );
+}
+
 function BlockActions({ isFirst, isLast, onMoveUp, onMoveDown, onDelete }: {
   isFirst: boolean; isLast: boolean;
   onMoveUp: () => void; onMoveDown: () => void; onDelete: () => void;
@@ -203,7 +260,7 @@ function BlockActions({ isFirst, isLast, onMoveUp, onMoveDown, onDelete }: {
 
 // ─── AddBlockMenu ─────────────────────────────────────────────────────────────
 
-function AddBlockMenu({ onAdd }: { onAdd: (type: "text" | "section" | "image") => void }) {
+function AddBlockMenu({ onAdd }: { onAdd: (type: "text" | "section" | "image" | "table") => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
@@ -219,6 +276,7 @@ function AddBlockMenu({ onAdd }: { onAdd: (type: "text" | "section" | "image") =
             { type: "text" as const, icon: "AlignLeft", label: "Текст" },
             { type: "section" as const, icon: "Heading2", label: "Раздел / подраздел" },
             { type: "image" as const, icon: "Image", label: "Иллюстрация (карта, схема)" },
+            { type: "table" as const, icon: "Table2", label: "Таблица" },
           ].map((item) => (
             <button
               key={item.type}
@@ -249,8 +307,11 @@ export function IntroSection({ reportId }: { reportId: string }) {
 
   const update = (next: IntroBlock[]) => { setBlocks(next); persist(next); };
 
-  const addBlock = (type: "text" | "section" | "image") => {
-    const block: IntroBlock = { id: newId(), type, content: "", sectionTitle: "", level: 1 };
+  const addBlock = (type: "text" | "section" | "image" | "table") => {
+    const block: IntroBlock = {
+      id: newId(), type, content: "", sectionTitle: "", level: 1,
+      ...(type === "table" ? { tableData: makeTable(3, 3), tableCaption: "" } : {}),
+    };
     update([...blocks, block]);
   };
 
@@ -320,6 +381,7 @@ export function IntroSection({ reportId }: { reportId: string }) {
             };
             if (block.type === "section") return <SectionHeading key={block.id} {...props} sectionNum={introNum.get(block.id) ?? "1.?"} />;
             if (block.type === "image") return <ImageBlock key={block.id} {...props} reportId={reportId} />;
+            if (block.type === "table") return <TableBlock key={block.id} {...props} />;
             return <TextBlock key={block.id} {...props} />;
           })}
           <AddBlockMenu onAdd={addBlock} />

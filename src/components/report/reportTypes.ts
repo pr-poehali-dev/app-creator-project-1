@@ -205,7 +205,7 @@ export interface GraphicAppendix {
 
 // ─── Intro (Введение) ─────────────────────────────────────────────────────────
 
-export type IntroBlockType = "text" | "section" | "image";
+export type IntroBlockType = "text" | "section" | "image" | "table";
 
 export interface IntroImage {
   id: string;
@@ -226,6 +226,10 @@ export interface IntroBlock {
   level?: 1 | 2;
   /** type=image */
   image?: IntroImage;
+  /** type=table: данные таблицы */
+  tableData?: TableData;
+  /** type=table: подпись таблицы */
+  tableCaption?: string;
 }
 
 // ─── Main text part ───────────────────────────────────────────────────────────
