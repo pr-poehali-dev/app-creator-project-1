@@ -31,12 +31,19 @@ function useLocalStorage<T>(key: string, initial: T) {
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
-export default function Index() {
-  // Заполняем данные тестовых отчётов один раз при первом запуске
+// Заполняем тестовые данные один раз при загрузке модуля (до первого рендера),
+// чтобы useLocalStorage ниже сразу прочитал актуальные значения.
+let seeded = false;
+function ensureSeeded() {
+  if (seeded) return;
+  seeded = true;
   seedReport2();
   seedReport3();
-  // Добавляем недостающие seed-отчёты в сохранённый список (для уже опубликованных версий)
   mergeSeedReports();
+}
+
+export default function Index() {
+  ensureSeeded();
 
   const [section, setSection] = useState<Section>("reports");
   const [openReportId, setOpenReportId] = useState<string | null>(null);
