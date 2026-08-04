@@ -49,6 +49,38 @@
       "expectedStatus": 200,
       "expectedBody": {"ok": true},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST upsert report",
+      "method": "POST",
+      "path": "/",
+      "body": {"resource": "reports", "item": {"id": "test-rep-x", "title": "Тестовый отчёт", "year": "2024"}},
+      "expectedStatus": 200,
+      "expectedBody": {"report": {"id": "test-rep-x", "title": "Тестовый отчёт", "year": "2024"}},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET reports list",
+      "method": "GET",
+      "path": "/?resource=reports",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET single report",
+      "method": "GET",
+      "path": "/?resource=reports&id=test-rep-x",
+      "expectedStatus": 200,
+      "expectedBody": {"report": {"id": "test-rep-x", "title": "Тестовый отчёт"}},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "DELETE report",
+      "method": "DELETE",
+      "path": "/",
+      "body": {"resource": "reports", "id": "test-rep-x"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
     }
   ]
 }

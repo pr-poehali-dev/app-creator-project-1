@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ReportPage from "./ReportPage";
 import KitPage from "./KitPage";
-import type { ReportData } from "@/types/geo";
 import { ReportsSection } from "@/components/geo/ReportsSection";
 import { AppHeader, AppFooter } from "./AppHeader";
 import { AppSidebar, MobileTabs, ResetConfirmModal } from "./AppSidebar";
 import { useReferences } from "@/lib/useReferences";
+import { useReports } from "@/lib/useReports";
+import { deleteReport, saveReport } from "@/lib/referencesApi";
 import Icon from "@/components/ui/icon";
 import {
   type Section,
@@ -13,27 +14,10 @@ import {
   seedReport2, seedReport3, mergeSeedReports,
 } from "./initData";
 
-function useLocalStorage<T>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const stored = localStorage.getItem(key);
-      return stored ? (JSON.parse(stored) as T) : initial;
-    } catch {
-      return initial;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(value));
-  }, [key, value]);
-
-  return [value, setValue] as const;
-}
-
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 // Заполняем тестовые данные один раз при загрузке модуля (до первого рендера),
-// чтобы useLocalStorage ниже сразу прочитал актуальные значения.
+// чтобы автомиграция в БД подхватила их из localStorage.
 let seeded = false;
 function ensureSeeded() {
   if (seeded) return;
@@ -51,19 +35,23 @@ export default function Index() {
   // Внутри открытого комплекта: "kit" — список из 4 элементов, "report" — сам отчёт
   const [kitView, setKitView] = useState<"kit" | "report">("kit");
   const [resetConfirm, setResetConfirm] = useState(false);
-  const [reports, setReports] = useLocalStorage<ReportData[]>("geo_reports", INIT_REPORTS);
+
+  // Отчёты хранятся в общей БД (с автомиграцией из браузера)
+  const { reports, setReports, loading: reportsLoading } = useReports(INIT_REPORTS);
 
   // Общая база справочников (PostgreSQL)
   const refs = useReferences();
   const { customers, contractors, licenses, contracts, save, remove, loading } = refs;
 
-  const handleReset = () => {
+  const handleReset = async () => {
+    // Чистим отчёты в БД и восстанавливаем стартовый набор
+    try {
+      for (const r of reports) await deleteReport(r.id);
+      for (const r of INIT_REPORTS) await saveReport(r);
+    } catch { /* ignore */ }
     Object.keys(localStorage)
       .filter((k) => k.startsWith("geo_"))
       .forEach((k) => localStorage.removeItem(k));
-    localStorage.setItem("geo_reports", JSON.stringify(INIT_REPORTS));
-    seedReport2();
-    seedReport3();
     window.location.reload();
   };
 
@@ -128,10 +116,10 @@ export default function Index() {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-6 py-8 pt-20 md:pt-8">
-            {loading && (
+            {(loading || reportsLoading) && (
               <div className="flex items-center gap-2 text-muted-foreground text-sm font-mono mb-4">
                 <Icon name="Loader2" size={14} className="animate-spin" />
-                Загрузка общей базы справочников…
+                {reportsLoading ? "Загрузка отчётов из базы…" : "Загрузка общей базы справочников…"}
               </div>
             )}
             <ReportsSection

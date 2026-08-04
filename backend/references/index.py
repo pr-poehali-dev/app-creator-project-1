@@ -97,10 +97,57 @@ def _handle_passport(method, cur, event, body):
     return _passport_response(405, {'error': 'method not allowed'})
 
 
+def _report_row(row):
+    # data содержит всю карточку ReportData; id/title дублируются в колонках
+    data = dict(row['data'] or {})
+    data['id'] = row['id']
+    if row.get('title') is not None:
+        data.setdefault('title', row['title'])
+    return data
+
+
+def _handle_reports(method, cur, event, body):
+    # GET: список всех отчётов, либо один по ?id=. POST: upsert. DELETE: по id.
+    if method == 'GET':
+        qs = event.get('queryStringParameters') or {}
+        rep_id = str(qs.get('id') or '')
+        if rep_id:
+            cur.execute("SELECT id, title, data FROM reports WHERE id = %s", (rep_id,))
+            row = cur.fetchone()
+            return _passport_response(200, {'report': _report_row(row) if row else None})
+        cur.execute("SELECT id, title, data FROM reports ORDER BY created_at")
+        rows = cur.fetchall()
+        return _passport_response(200, {'reports': [_report_row(r) for r in rows]})
+
+    if method == 'DELETE':
+        rep_id = str(body.get('id') or '')
+        if not rep_id:
+            return _passport_response(400, {'error': 'id required'})
+        cur.execute("DELETE FROM reports WHERE id = %s", (rep_id,))
+        return _passport_response(200, {'ok': True})
+
+    if method == 'POST':
+        item = body.get('item') or {}
+        rep_id = str(item.get('id') or '')
+        if not rep_id:
+            return _passport_response(400, {'error': 'id required'})
+        title = str(item.get('title') or '')
+        cur.execute(
+            "INSERT INTO reports (id, title, data) VALUES (%s, %s, %s) "
+            "ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, data = EXCLUDED.data, updated_at = now() "
+            "RETURNING id, title, data",
+            (rep_id, title, json.dumps(item, ensure_ascii=False)),
+        )
+        row = cur.fetchone()
+        return _passport_response(200, {'report': _report_row(row)})
+
+    return _passport_response(405, {'error': 'method not allowed'})
+
+
 def handler(event, context):
-    '''Общая база: справочники (заказчики, исполнители, лицензии, контракты) и паспорта ГКМ.
-    GET — все справочники, либо паспорт (resource=passport&reportId=..).
-    POST — upsert записи справочника или паспорта (resource=passport). DELETE — удалить.'''
+    '''Общая база: справочники, паспорта ГКМ и отчёты (комплекты).
+    GET — справочники, паспорт (resource=passport&reportId=..) или отчёты (resource=reports).
+    POST — upsert записи. DELETE — удалить.'''
     method = event.get('httpMethod', 'GET')
     if method == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS, 'body': ''}
@@ -114,11 +161,13 @@ def handler(event, context):
         if method in ('POST', 'DELETE'):
             body = json.loads(event.get('body') or '{}')
 
-        # Роутинг на паспорта ГКМ
+        # Роутинг по ресурсам
         qs = event.get('queryStringParameters') or {}
-        is_passport = (qs.get('resource') == 'passport') or (body.get('resource') == 'passport')
-        if is_passport:
+        resource = qs.get('resource') or body.get('resource')
+        if resource == 'passport':
             return _handle_passport(method, cur, event, body)
+        if resource == 'reports':
+            return _handle_reports(method, cur, event, body)
 
         if method == 'GET':
             data = _fetch_all(cur)

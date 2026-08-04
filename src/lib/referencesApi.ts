@@ -1,4 +1,4 @@
-import type { Customer, Contractor, License, Contract } from "@/types/geo";
+import type { Customer, Contractor, License, Contract, ReportData } from "@/types/geo";
 
 // Общая база справочников (PostgreSQL) через cloud function
 const API_URL = "https://functions.poehali.dev/23734698-911f-4d95-b901-0a3218b70480";
@@ -72,4 +72,33 @@ export async function savePassport(record: PassportRecord): Promise<PassportReco
   if (!res.ok) throw new Error(`Не удалось сохранить паспорт: ${res.status}`);
   const data = await res.json();
   return data.passport as PassportRecord;
+}
+
+// ── Отчёты (комплекты) ────────────────────────────────────────────────────────
+
+export async function fetchReports(): Promise<ReportData[]> {
+  const res = await fetch(`${API_URL}?resource=reports`, { method: "GET" });
+  if (!res.ok) throw new Error(`Не удалось загрузить отчёты: ${res.status}`);
+  const data = await res.json();
+  return (data.reports || []) as ReportData[];
+}
+
+export async function saveReport(report: ReportData): Promise<ReportData> {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resource: "reports", item: report }),
+  });
+  if (!res.ok) throw new Error(`Не удалось сохранить отчёт: ${res.status}`);
+  const data = await res.json();
+  return data.report as ReportData;
+}
+
+export async function deleteReport(id: string): Promise<void> {
+  const res = await fetch(API_URL, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resource: "reports", id }),
+  });
+  if (!res.ok) throw new Error(`Не удалось удалить отчёт: ${res.status}`);
 }
