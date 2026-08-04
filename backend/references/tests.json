@@ -116,6 +116,28 @@
       "bodyMatcher": "partial"
     },
     {
+      "name": "POST section meta",
+      "method": "POST",
+      "path": "/",
+      "body": {"resource": "section_meta", "reportId": "test-blk-1", "tabId": "abstract", "data": {"authors": ["Иванов И.И."]}},
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET section meta",
+      "method": "GET",
+      "path": "/?resource=section_meta&reportId=test-blk-1&tabId=abstract",
+      "expectedStatus": 200
+    },
+    {
+      "name": "DELETE section meta",
+      "method": "DELETE",
+      "path": "/",
+      "body": {"resource": "section_meta", "reportId": "test-blk-1", "tabId": "abstract"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    },
+    {
       "name": "DELETE study block",
       "method": "DELETE",
       "path": "/",

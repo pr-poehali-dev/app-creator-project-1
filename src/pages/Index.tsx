@@ -6,7 +6,7 @@ import { AppHeader, AppFooter } from "./AppHeader";
 import { AppSidebar, MobileTabs, ResetConfirmModal } from "./AppSidebar";
 import { useReferences } from "@/lib/useReferences";
 import { useReports } from "@/lib/useReports";
-import { deleteReport, saveReport } from "@/lib/referencesApi";
+import { deleteReport, saveReport, deleteAllBlocks } from "@/lib/referencesApi";
 import Icon from "@/components/ui/icon";
 import {
   type Section,
@@ -46,7 +46,10 @@ export default function Index() {
   const handleReset = async () => {
     // Чистим отчёты в БД и восстанавливаем стартовый набор
     try {
-      for (const r of reports) await deleteReport(r.id);
+      for (const r of reports) {
+        await deleteAllBlocks(r.id);
+        await deleteReport(r.id);
+      }
       for (const r of INIT_REPORTS) await saveReport(r);
     } catch { /* ignore */ }
     Object.keys(localStorage)

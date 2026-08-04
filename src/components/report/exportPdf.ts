@@ -50,6 +50,10 @@ export async function collectPdfData(
     loadJson<IntroBlock[]>("conclusion", id, "geo_conclusion", []),
   ]);
 
+  const contentsPages = await loadJson<Record<string, string>>(
+    "contents_pages", id, "geo_contents_pages", {},
+  );
+
   const contents = await buildContentsAsync(id, report, contractor, contractors);
 
   return {
@@ -58,6 +62,7 @@ export async function collectPdfData(
     contents, references, terms, tables,
     textAppendices, graphicAppendices,
     introBlocks, mainSections, conclusionBlocks,
+    contentsPages,
   };
 }
 

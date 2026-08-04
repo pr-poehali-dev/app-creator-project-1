@@ -5,6 +5,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 const COMMON_SCALES = ["1:500", "1:1 000", "1:2 000", "1:5 000", "1:10 000", "1:25 000", "1:50 000", "1:100 000", "1:200 000", "1:500 000", "1:1 000 000"];
 
@@ -15,14 +16,10 @@ export function GraphicAppendicesSection({ reportId, secrecy, responsible, contr
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_graphic_appendices_${reportId}`;
-
-  const load = (): GraphicAppendix[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (items: GraphicAppendix[]) => localStorage.setItem(storageKey, JSON.stringify(items));
-
-  const [items, setItems] = useState<GraphicAppendix[]>(load);
+  // Графические приложения хранятся в общей БД (с автопереносом из браузера)
+  const { value: items, setValue: setItems } = useReportBlock<GraphicAppendix[]>(
+    "graphic_appendices", reportId, [], `geo_graphic_appendices_${reportId}`,
+  );
   const [modal, setModal] = useState<null | "add" | GraphicAppendix>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -97,14 +94,12 @@ export function GraphicAppendicesSection({ reportId, secrecy, responsible, contr
           : item
       );
     }
-    persist(next);
     setItems(next);
     setModal(null);
   };
 
   const removeItem = (id: string) => {
     const renumbered = items.filter((i) => i.id !== id).map((item, idx) => ({ ...item, number: idx + 1 }));
-    persist(renumbered);
     setItems(renumbered);
     setDeleteId(null);
   };

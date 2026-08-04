@@ -5,6 +5,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 export function TextAppendicesSection({ reportId, secrecy, responsible, contractor, contractors }: {
   reportId: string;
@@ -13,14 +14,10 @@ export function TextAppendicesSection({ reportId, secrecy, responsible, contract
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_text_appendices_${reportId}`;
-
-  const load = (): TextAppendix[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (items: TextAppendix[]) => localStorage.setItem(storageKey, JSON.stringify(items));
-
-  const [items, setItems] = useState<TextAppendix[]>(load);
+  // Текстовые приложения хранятся в общей БД (с автопереносом из браузера)
+  const { value: items, setValue: setItems } = useReportBlock<TextAppendix[]>(
+    "text_appendices", reportId, [], `geo_text_appendices_${reportId}`,
+  );
   const [modal, setModal] = useState<null | "add" | TextAppendix>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -95,14 +92,12 @@ export function TextAppendicesSection({ reportId, secrecy, responsible, contract
           : item
       );
     }
-    persist(next);
     setItems(next);
     setModal(null);
   };
 
   const removeItem = (id: string) => {
     const renumbered = items.filter((i) => i.id !== id).map((item, idx) => ({ ...item, number: idx + 1 }));
-    persist(renumbered);
     setItems(renumbered);
     setDeleteId(null);
   };

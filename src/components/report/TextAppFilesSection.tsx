@@ -5,16 +5,9 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 function newId() { return Date.now().toString() + Math.random().toString(36).slice(2, 6); }
-
-function loadApps(reportId: string): TextAppendix[] {
-  try { return JSON.parse(localStorage.getItem(`geo_text_appendices_${reportId}`) || "[]"); } catch { return []; }
-}
-
-function saveApps(reportId: string, items: TextAppendix[]) {
-  localStorage.setItem(`geo_text_appendices_${reportId}`, JSON.stringify(items));
-}
 
 export function TextAppFilesSection({ reportId, secrecy, responsible, contractor, contractors }: {
   reportId: string;
@@ -23,7 +16,10 @@ export function TextAppFilesSection({ reportId, secrecy, responsible, contractor
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const [apps, setApps] = useState<TextAppendix[]>(() => loadApps(reportId));
+  // Тот же блок, что и «Список текстовых приложений» — общая БД
+  const { value: apps, setValue: setApps } = useReportBlock<TextAppendix[]>(
+    "text_appendices", reportId, [], `geo_text_appendices_${reportId}`,
+  );
   const [uploading, setUploading] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,9 +34,7 @@ export function TextAppFilesSection({ reportId, secrecy, responsible, contractor
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const persist = (next: TextAppendix[]) => {
-    const renumbered = next.map((a, idx) => ({ ...a, number: idx + 1 }));
-    setApps(renumbered);
-    saveApps(reportId, renumbered);
+    setApps(next.map((a, idx) => ({ ...a, number: idx + 1 })));
   };
 
   const upload = async (raw: File, appId: string) => {

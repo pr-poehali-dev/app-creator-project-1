@@ -5,18 +5,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
-
-// Нормализуем хранилище: поддержка старого формата (один объект) и нового (массив)
-function loadFiles(key: string): TaskFile[] {
-  try {
-    const raw = JSON.parse(localStorage.getItem(key) || "null");
-    if (!raw) return [];
-    if (Array.isArray(raw)) return raw;
-    return [raw]; // старый формат — одиночный объект
-  } catch {
-    return [];
-  }
-}
+import { useReportBlock } from "@/lib/useReportBlock";
 
 const ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.gif,.tif,.tiff,application/pdf,image/*";
 
@@ -38,18 +27,18 @@ export function TaskCopySection({ reportId, secrecy, responsible, contractor, co
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_task_file_${reportId}`;
-  const [files, setFiles] = useState<TaskFile[]>(() => loadFiles(storageKey));
+  // Копия задания хранится в общей БД (с автопереносом из браузера)
+  const { value: rawFiles, setValue: setFiles } = useReportBlock<TaskFile[] | TaskFile>(
+    "task_file", reportId, [], `geo_task_file_${reportId}`,
+  );
+  // Поддержка старого формата: одиночный объект вместо массива
+  const files: TaskFile[] = Array.isArray(rawFiles) ? rawFiles : rawFiles ? [rawFiles] : [];
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
-  const persist = (list: TaskFile[]) => {
-    setFiles(list);
-    if (list.length) localStorage.setItem(storageKey, JSON.stringify(list));
-    else localStorage.removeItem(storageKey);
-  };
+  const persist = (list: TaskFile[]) => setFiles(list);
 
   const uploadOne = (f: File) => new Promise<TaskFile | null>((resolve) => {
     const reader = new FileReader();

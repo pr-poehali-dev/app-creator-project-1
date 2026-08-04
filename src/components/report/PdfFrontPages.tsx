@@ -230,9 +230,8 @@ export function PdfAbstract({ d }: { d: PdfData }) {
 // ─── Содержание ───────────────────────────────────────────────────────────────
 
 export function PdfContents({ d }: { d: PdfData }) {
-  const pages: Record<string, string> = (() => {
-    try { return JSON.parse(localStorage.getItem(`geo_contents_pages_${d.report.id}`) || "{}"); } catch { return {}; }
-  })();
+  // Номера страниц приходят вместе с данными отчёта (из общей БД)
+  const pages: Record<string, string> = d.contentsPages || {};
 
   return (
     <PdfPage>

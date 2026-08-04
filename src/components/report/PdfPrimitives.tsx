@@ -26,6 +26,7 @@ export interface PdfData {
   introBlocks: IntroBlock[];
   mainSections: MainSection[];
   conclusionBlocks: IntroBlock[];
+  contentsPages?: Record<string, string>;
 }
 
 // ─── Примитивные компоненты ───────────────────────────────────────────────────

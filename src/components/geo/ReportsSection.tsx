@@ -4,6 +4,7 @@ import { SectionHeader, Modal } from "./GeoUi";
 import { ReportCard } from "./ReportCard";
 import { ReportViewModal } from "./ReportViewModal";
 import { ReportFormFields } from "./ReportFormFields";
+import { deleteAllBlocks } from "@/lib/referencesApi";
 
 const emptyForm: Omit<ReportData, "id"> = {
   title: "",
@@ -125,8 +126,9 @@ export function ReportsSection({
   };
 
   const remove = (id: string) => {
-    // Удаляем связанные данные отчёта из localStorage (этикетка, титул, реферат,
-    // текстовая часть, таблицы, приложения и т.д.), чтобы не оставлять «сирот»
+    // Удаляем все блоки отчёта в общей БД, чтобы не оставлять «сирот»
+    void deleteAllBlocks(id);
+    // И старые копии в браузере
     Object.keys(localStorage)
       .filter((k) => k.startsWith("geo_") && k.endsWith(`_${id}`))
       .forEach((k) => localStorage.removeItem(k));

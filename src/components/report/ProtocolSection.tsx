@@ -4,6 +4,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 interface ProtocolFile {
   url: string;
@@ -18,23 +19,16 @@ export function ProtocolSection({ reportId, secrecy, responsible, contractor, co
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_protocol_${reportId}`;
-
-  const load = (): ProtocolFile | null => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "null"); } catch { return null; }
-  };
-
-  const [file, setFile] = useState<ProtocolFile | null>(load);
+  // Раздел хранится в общей БД (с автопереносом из браузера)
+  const { value: file, setValue: setFile } = useReportBlock<ProtocolFile | null>(
+    "protocol", reportId, null, `geo_protocol_${reportId}`,
+  );
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
-  const persist = (f: ProtocolFile | null) => {
-    setFile(f);
-    if (f) localStorage.setItem(storageKey, JSON.stringify(f));
-    else localStorage.removeItem(storageKey);
-  };
+  const persist = (f: ProtocolFile | null) => setFile(f);
 
   const upload = async (raw: File) => {
     if (!raw.type.includes("pdf") && !raw.name.toLowerCase().endsWith(".pdf")) {

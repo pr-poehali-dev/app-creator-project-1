@@ -5,17 +5,11 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 const COMMON_SCALES = ["1:500", "1:1 000", "1:2 000", "1:5 000", "1:10 000", "1:25 000", "1:50 000", "1:100 000", "1:200 000", "1:500 000", "1:1 000 000"];
 
 function newId() { return Date.now().toString() + Math.random().toString(36).slice(2, 6); }
-
-function loadApps(reportId: string): GraphicAppendix[] {
-  try { return JSON.parse(localStorage.getItem(`geo_graphic_appendices_${reportId}`) || "[]"); } catch { return []; }
-}
-function saveApps(reportId: string, items: GraphicAppendix[]) {
-  localStorage.setItem(`geo_graphic_appendices_${reportId}`, JSON.stringify(items));
-}
 
 type View = "list" | "files";
 
@@ -27,7 +21,10 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
   contractors?: Contractor[];
 }) {
   const [view, setView] = useState<View>("files");
-  const [apps, setApps] = useState<GraphicAppendix[]>(() => loadApps(reportId));
+  // Тот же блок, что и «Список графических приложений» — общая БД
+  const { value: apps, setValue: setApps } = useReportBlock<GraphicAppendix[]>(
+    "graphic_appendices", reportId, [], `geo_graphic_appendices_${reportId}`,
+  );
   const [uploading, setUploading] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,9 +39,7 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
   const persist = (next: GraphicAppendix[]) => {
-    const renumbered = next.map((a, idx) => ({ ...a, number: idx + 1 }));
-    setApps(renumbered);
-    saveApps(reportId, renumbered);
+    setApps(next.map((a, idx) => ({ ...a, number: idx + 1 })));
   };
 
   const upload = async (raw: File, appId: string) => {

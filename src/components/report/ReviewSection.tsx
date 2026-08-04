@@ -4,6 +4,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 interface ReviewFile {
   id: string;
@@ -22,22 +23,16 @@ export function ReviewSection({ reportId, secrecy, responsible, contractor, cont
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_review_${reportId}`;
-
-  const load = (): ReviewFile[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-
-  const [reviews, setReviews] = useState<ReviewFile[]>(load);
+  // Раздел хранится в общей БД (с автопереносом из браузера)
+  const { value: reviews, setValue: setReviews } = useReportBlock<ReviewFile[]>(
+    "review", reportId, [], `geo_review_${reportId}`,
+  );
   const [uploading, setUploading] = useState<string | null>(null); // id или "new"
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
-  const persist = (next: ReviewFile[]) => {
-    setReviews(next);
-    localStorage.setItem(storageKey, JSON.stringify(next));
-  };
+  const persist = (next: ReviewFile[]) => setReviews(next);
 
   const upload = async (raw: File, slotId: string, label: string) => {
     if (!raw.type.includes("pdf") && !raw.name.toLowerCase().endsWith(".pdf")) {

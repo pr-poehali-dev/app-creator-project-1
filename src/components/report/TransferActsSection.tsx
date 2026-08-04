@@ -4,6 +4,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 interface TransferAct {
   id: string;
@@ -22,22 +23,16 @@ export function TransferActsSection({ reportId, secrecy, responsible, contractor
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_transfer_acts_${reportId}`;
-
-  const load = (): TransferAct[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-
-  const [acts, setActs] = useState<TransferAct[]>(load);
+  // Раздел хранится в общей БД (с автопереносом из браузера)
+  const { value: acts, setValue: setActs } = useReportBlock<TransferAct[]>(
+    "transfer_acts", reportId, [], `geo_transfer_acts_${reportId}`,
+  );
   const [uploading, setUploading] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
-  const persist = (next: TransferAct[]) => {
-    setActs(next);
-    localStorage.setItem(storageKey, JSON.stringify(next));
-  };
+  const persist = (next: TransferAct[]) => setActs(next);
 
   const upload = async (raw: File, slotId: string, label: string) => {
     if (!raw.type.includes("pdf") && !raw.name.toLowerCase().endsWith(".pdf")) {

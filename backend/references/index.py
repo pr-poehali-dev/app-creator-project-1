@@ -173,6 +173,44 @@ BLOCKS = {
 }
 
 
+def _handle_section_meta(method, cur, event, body):
+    # Подписи разделов: ключ отчёт + вкладка
+    if method == 'GET':
+        qs = event.get('queryStringParameters') or {}
+        report_id = str(qs.get('reportId') or '')
+        tab_id = str(qs.get('tabId') or '')
+    else:
+        report_id = str(body.get('reportId') or '')
+        tab_id = str(body.get('tabId') or '')
+
+    if not report_id or not tab_id:
+        return _passport_response(400, {'error': 'reportId and tabId required'})
+
+    if method == 'GET':
+        cur.execute("SELECT data FROM report_section_meta WHERE report_id = %s AND tab_id = %s", (report_id, tab_id))
+        row = cur.fetchone()
+        return _passport_response(200, {'data': row['data'] if row else None})
+
+    if method == 'POST':
+        data = body.get('data')
+        if data is None:
+            return _passport_response(400, {'error': 'data required'})
+        cur.execute(
+            "INSERT INTO report_section_meta (report_id, tab_id, data) VALUES (%s, %s, %s) "
+            "ON CONFLICT (report_id, tab_id) DO UPDATE SET data = EXCLUDED.data, updated_at = now() "
+            "RETURNING data",
+            (report_id, tab_id, json.dumps(data, ensure_ascii=False)),
+        )
+        row = cur.fetchone()
+        return _passport_response(200, {'data': row['data']})
+
+    if method == 'DELETE':
+        cur.execute("DELETE FROM report_section_meta WHERE report_id = %s AND tab_id = %s", (report_id, tab_id))
+        return _passport_response(200, {'ok': True})
+
+    return _passport_response(405, {'error': 'method not allowed'})
+
+
 def _handle_block(method, cur, event, body):
     # Универсальный CRUD блоков отчёта. block — имя блока, reportId — отчёт.
     if method == 'GET':
@@ -240,6 +278,8 @@ def handler(event, context):
             return _handle_reports(method, cur, event, body)
         if resource == 'block':
             return _handle_block(method, cur, event, body)
+        if resource == 'section_meta':
+            return _handle_section_meta(method, cur, event, body)
 
         if method == 'GET':
             data = _fetch_all(cur)

@@ -5,14 +5,13 @@ import type {
   AppendixRef, AppendixRefKind,
   TableEntry, TextAppendix, GraphicAppendix,
 } from "./reportTypes";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── Утилиты ──────────────────────────────────────────────────────────────────
 
 export function newId() { return Date.now().toString() + Math.random().toString(36).slice(2, 6); }
 
-export function loadJson<T>(key: string): T[] {
-  try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; }
-}
+
 
 // ─── Карта blockId → порядковый номер ─────────────────────────────────────────
 
@@ -94,9 +93,10 @@ export function AppendixRefPicker({ reportId, onPick, onClose }: {
 }) {
   const [kind, setKind] = useState<AppendixRefKind>("table");
 
-  const tables = loadJson<TableEntry>(`geo_tables_${reportId}`);
-  const textApps = loadJson<TextAppendix>(`geo_text_appendices_${reportId}`);
-  const graphApps = loadJson<GraphicAppendix>(`geo_graphic_appendices_${reportId}`);
+  // Списки берём из общей БД (с автопереносом из браузера)
+  const { value: tables } = useReportBlock<TableEntry[]>("tables", reportId, [], `geo_tables_${reportId}`);
+  const { value: textApps } = useReportBlock<TextAppendix[]>("text_appendices", reportId, [], `geo_text_appendices_${reportId}`);
+  const { value: graphApps } = useReportBlock<GraphicAppendix[]>("graphic_appendices", reportId, [], `geo_graphic_appendices_${reportId}`);
 
   const items: { id: string; number: number; label: string }[] =
     kind === "table"

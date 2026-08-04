@@ -120,6 +120,49 @@ export async function saveBlock<T>(block: BlockName, reportId: string, data: T):
   if (!res.ok) throw new Error(`Не удалось сохранить блок ${block}: ${res.status}`);
 }
 
+export const ALL_BLOCKS: BlockName[] = [
+  "label", "title_page", "abstract", "task_file", "intro", "main_text", "conclusion",
+  "terms", "references", "study", "illustrations", "tables", "text_appendices",
+  "graphic_appendices", "text_app_files", "graphic_app_files", "metrological", "patent",
+  "review", "protocol", "cost", "transfer_acts", "contents_pages", "contents_custom",
+];
+
+/** Удаляет все блоки отчёта и его паспорт из БД. */
+export async function deleteAllBlocks(reportId: string): Promise<void> {
+  await Promise.all([
+    ...ALL_BLOCKS.map((block) =>
+      fetch(API_URL, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resource: "block", block, reportId }),
+      }).catch(() => undefined),
+    ),
+    fetch(API_URL, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resource: "passport", reportId }),
+    }).catch(() => undefined),
+  ]);
+}
+
+// Подписи разделов (по вкладкам)
+export async function fetchSectionMeta<T>(reportId: string, tabId: string): Promise<T | null> {
+  const url = `${API_URL}?resource=section_meta&reportId=${encodeURIComponent(reportId)}&tabId=${encodeURIComponent(tabId)}`;
+  const res = await fetch(url, { method: "GET" });
+  if (!res.ok) throw new Error(`Не удалось загрузить подписи: ${res.status}`);
+  const json = await res.json();
+  return (json.data ?? null) as T | null;
+}
+
+export async function saveSectionMeta<T>(reportId: string, tabId: string, data: T): Promise<void> {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resource: "section_meta", reportId, tabId, data }),
+  });
+  if (!res.ok) throw new Error(`Не удалось сохранить подписи: ${res.status}`);
+}
+
 export async function deleteReport(id: string): Promise<void> {
   const res = await fetch(API_URL, {
     method: "DELETE",

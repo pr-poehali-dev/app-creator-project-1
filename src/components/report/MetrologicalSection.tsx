@@ -4,6 +4,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -121,20 +122,14 @@ export function MetrologicalSection({ reportId, secrecy, responsible, contractor
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_metrological_${reportId}`;
-
-  const load = (): MetroData => {
-    try { return { ...DEFAULT, ...JSON.parse(localStorage.getItem(storageKey) || "{}") }; } catch { return DEFAULT; }
-  };
-  const persist = (d: MetroData) => localStorage.setItem(storageKey, JSON.stringify(d));
-
-  const [data, setData] = useState<MetroData>(load);
+  // Раздел хранится в общей БД (с автопереносом из браузера)
+  const { value: stored, setValue: setData } = useReportBlock<MetroData>(
+    "metrological", reportId, DEFAULT, `geo_metrological_${reportId}`,
+  );
+  const data: MetroData = { ...DEFAULT, ...(stored || {}) };
   const { openPreview, modal: pdfModal } = usePdfPreview();
 
-  const update = (patch: Partial<MetroData>) => {
-    const next = { ...data, ...patch };
-    setData(next); persist(next);
-  };
+  const update = (patch: Partial<MetroData>) => setData({ ...data, ...patch });
 
   const setType = (type: MetroType) => update({ type, conclusions: type === "conclusion" ? data.conclusions : [], certificateFile: undefined });
 

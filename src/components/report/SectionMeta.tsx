@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import type { Secrecy, Contractor, Executor } from "@/types/geo";
 import type { TabId } from "./reportTypes";
+import { fetchSectionMeta, saveSectionMeta } from "@/lib/referencesApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,13 +31,10 @@ function storageKey(reportId: string, tabId: TabId) {
   return `geo_section_meta_${reportId}_${tabId}`;
 }
 
-function loadMeta(reportId: string, tabId: TabId): SectionMetaData {
-  try { return JSON.parse(localStorage.getItem(storageKey(reportId, tabId)) || "null") ?? { authors: [] }; }
-  catch { return { authors: [] }; }
-}
-
-function saveMeta(reportId: string, tabId: TabId, data: SectionMetaData) {
-  localStorage.setItem(storageKey(reportId, tabId), JSON.stringify(data));
+// Подписи разделов хранятся в общей БД. При отсутствии в БД — берём из браузера.
+function loadLegacyMeta(reportId: string, tabId: TabId): SectionMetaData | null {
+  try { return JSON.parse(localStorage.getItem(storageKey(reportId, tabId)) || "null"); }
+  catch { return null; }
 }
 
 // ─── SectionMeta component ────────────────────────────────────────────────────
@@ -56,13 +54,34 @@ export function SectionMeta({
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const [meta, setMeta] = useState<SectionMetaData>(() => loadMeta(reportId, tabId));
+  const [meta, setMeta] = useState<SectionMetaData>({ authors: [] });
   const [expanded, setExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // Загружаем подписи из БД; если там пусто — переносим из браузера
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const fromDb = await fetchSectionMeta<SectionMetaData>(reportId, tabId);
+        if (!alive) return;
+        if (fromDb) { setMeta(fromDb); return; }
+        const legacy = loadLegacyMeta(reportId, tabId);
+        if (legacy) {
+          setMeta(legacy);
+          await saveSectionMeta(reportId, tabId, legacy);
+        }
+      } catch {
+        const legacy = loadLegacyMeta(reportId, tabId);
+        if (legacy && alive) setMeta(legacy);
+      }
+    })();
+    return () => { alive = false; };
+  }, [reportId, tabId]);
+
   const persist = (next: SectionMetaData) => {
     setMeta(next);
-    saveMeta(reportId, tabId, next);
+    void saveSectionMeta(reportId, tabId, next).catch(() => { /* ignore */ });
   };
 
   // Collect all available executors across contractor + co-contractors
