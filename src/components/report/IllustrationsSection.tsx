@@ -6,6 +6,7 @@ import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { SyncedIllustration } from "./syncFromText";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── IllustrationsSection ─────────────────────────────────────────────────────
 
@@ -18,17 +19,11 @@ interface IllustrationsSectionProps {
 }
 
 export function IllustrationsSection({ reportId, secrecy, responsible, contractor, contractors }: IllustrationsSectionProps) {
-  const storageKey = `geo_illustrations_${reportId}`;
-
-  const load = (): SyncedIllustration[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const save = (items: SyncedIllustration[]) => {
-    localStorage.setItem(storageKey, JSON.stringify(items));
-  };
-
-  const [items, setItems] = useState<SyncedIllustration[]>(load);
-  const refresh = () => setItems(load());
+  // Список иллюстраций хранится в общей БД (с автопереносом из браузера)
+  const { value: items, setValue: setItems, reload } = useReportBlock<SyncedIllustration[]>(
+    "illustrations", reportId, [], `geo_illustrations_${reportId}`,
+  );
+  const refresh = () => { void reload(); };
   const [modal, setModal] = useState<null | "add" | SyncedIllustration>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -110,7 +105,6 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
           : item
       );
     }
-    save(next);
     setItems(next);
     setModal(null);
   };
@@ -119,7 +113,6 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
     const next = items.filter((i) => i.id !== id);
     // Renumber
     const renumbered = next.map((item, idx) => ({ ...item, number: idx + 1 }));
-    save(renumbered);
     setItems(renumbered);
     setDeleteId(null);
   };

@@ -6,6 +6,7 @@ import { SectionMeta } from "./SectionMeta";
 import { usePdfPreview } from "./PdfPreviewModal";
 import type { SyncedTableEntry } from "./syncFromText";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 const FILE_ICON: Record<string, string> = {
   xlsx: "FileSpreadsheet",
@@ -32,16 +33,12 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_tables_${reportId}`;
-
-  const load = (): SyncedTableEntry[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (items: SyncedTableEntry[]) => localStorage.setItem(storageKey, JSON.stringify(items));
-
-  const [items, setItems] = useState<SyncedTableEntry[]>(load);
-  // Обновляем данные из localStorage (синхронизация из текста происходит в MainSection)
-  const refresh = () => setItems(load());
+  // Список таблиц хранится в общей БД (с автопереносом из браузера)
+  const { value: items, setValue: setItems, reload } = useReportBlock<SyncedTableEntry[]>(
+    "tables", reportId, [], `geo_tables_${reportId}`,
+  );
+  // Перечитываем из БД (синхронизация из текста происходит в MainSection)
+  const refresh = () => { void reload(); };
 
   const [modal, setModal] = useState<null | "add" | SyncedTableEntry>(null);
   const [uploading, setUploading] = useState(false);
@@ -117,14 +114,12 @@ export function TablesSection({ reportId, secrecy, responsible, contractor, cont
           : item
       );
     }
-    persist(next);
     setItems(next);
     setModal(null);
   };
 
   const removeItem = (id: string) => {
     const renumbered = items.filter((i) => i.id !== id).map((item, idx) => ({ ...item, number: idx + 1 }));
-    persist(renumbered);
     setItems(renumbered);
     setDeleteId(null);
   };

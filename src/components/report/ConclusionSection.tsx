@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { MainSection } from "./reportTypes";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -12,17 +13,6 @@ interface ConclusionBlock {
   content?: string;
   sectionTitle?: string;
   level?: 1 | 2;
-}
-
-/** Считаем номер Заключения: 1 (Введение) + кол-во разделов уровня 1 в основной части + 1 */
-function getConclusionNum(reportId: string): number {
-  try {
-    const main: MainSection[] = JSON.parse(localStorage.getItem(`geo_main_text_${reportId}`) || "[]");
-    const mainTopCount = main.filter((s) => s.level === 1).length;
-    return 1 + mainTopCount + 1; // 1=Введение, mainTopCount=разделы осн.части, +1=Заключение
-  } catch {
-    return 2;
-  }
 }
 
 /** Нумерация блоков внутри заключения */
@@ -156,19 +146,20 @@ function AddBlockMenu({ onAdd }: { onAdd: (type: ConclusionBlock["type"]) => voi
 // ─── ConclusionSection ────────────────────────────────────────────────────────
 
 export function ConclusionSection({ reportId }: { reportId: string }) {
-  const storageKey = `geo_conclusion_${reportId}`;
+  // Заключение хранится в общей БД (с автопереносом из браузера)
+  const { value: blocks, setValue: setBlocks } = useReportBlock<ConclusionBlock[]>(
+    "conclusion", reportId, [], `geo_conclusion_${reportId}`,
+  );
+  // Номер заключения зависит от количества разделов основной части (тоже из БД)
+  const { value: mainSections } = useReportBlock<MainSection[]>(
+    "main_text", reportId, [], `geo_main_text_${reportId}`,
+  );
 
-  const load = (): ConclusionBlock[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (blocks: ConclusionBlock[]) => localStorage.setItem(storageKey, JSON.stringify(blocks));
-
-  const [blocks, setBlocks] = useState<ConclusionBlock[]>(load);
-
-  const conclusionNum = getConclusionNum(reportId);
+  const mainTopCount = Array.isArray(mainSections) ? mainSections.filter((s) => s.level === 1).length : 0;
+  const conclusionNum = 1 + mainTopCount + 1; // 1=Введение, разделы осн. части, +1=Заключение
   const numbers = computeNumbers(blocks, conclusionNum);
 
-  const update = (next: ConclusionBlock[]) => { setBlocks(next); persist(next); };
+  const update = (next: ConclusionBlock[]) => setBlocks(next);
 
   const addBlock = (type: ConclusionBlock["type"]) => {
     update([...blocks, { id: newId(), type, content: "", sectionTitle: "", level: 2 }]);

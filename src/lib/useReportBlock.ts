@@ -67,6 +67,14 @@ export function useReportBlock<T>(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [block, reportId]);
 
+  // Перечитать блок из БД (например, после внешней синхронизации)
+  const reload = useCallback(async () => {
+    try {
+      const fromDb = await fetchBlock<T>(block, reportId);
+      if (fromDb !== null && fromDb !== undefined) setValueState(fromDb);
+    } catch { /* ignore */ }
+  }, [block, reportId]);
+
   const setValue = useCallback((update: React.SetStateAction<T>) => {
     setValueState((prev) => {
       const next = typeof update === "function"
@@ -86,5 +94,5 @@ export function useReportBlock<T>(
     });
   }, [block, reportId]);
 
-  return { value, setValue, loading, saving };
+  return { value, setValue, loading, saving, reload };
 }

@@ -1,26 +1,21 @@
-import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { MainSection } from "./reportTypes";
 import { syncAllFromText } from "./syncFromText";
 import { newId, buildBlockNumbers } from "./MainSectionHelpers";
 import { SectionCard } from "./MainSectionCard";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── MainTextSection ──────────────────────────────────────────────────────────
 
 export function MainTextSection({ reportId }: { reportId: string }) {
-  const storageKey = `geo_main_text_${reportId}`;
-
-  const load = (): MainSection[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (sections: MainSection[]) => localStorage.setItem(storageKey, JSON.stringify(sections));
-
-  const [sections, setSections] = useState<MainSection[]>(load);
+  // Основная часть хранится в общей БД (с автопереносом из браузера)
+  const { value: sections, setValue: setSections } = useReportBlock<MainSection[]>(
+    "main_text", reportId, [], `geo_main_text_${reportId}`,
+  );
 
   const update = (next: MainSection[]) => {
     setSections(next);
-    persist(next);
-    syncAllFromText(reportId, next);
+    void syncAllFromText(reportId, next);
   };
 
   const addSection = (level: 1 | 2) => {

@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { IntroBlock, IntroImage } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { TableBlockEditor, TablePreview, makeTable } from "./TableBlockEditor";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -296,16 +297,12 @@ function AddBlockMenu({ onAdd }: { onAdd: (type: "text" | "section" | "image" | 
 // ─── IntroSection ─────────────────────────────────────────────────────────────
 
 export function IntroSection({ reportId }: { reportId: string }) {
-  const storageKey = `geo_intro_${reportId}`;
+  // Введение хранится в общей БД (с автопереносом из браузера)
+  const { value: blocks, setValue: setBlocks } = useReportBlock<IntroBlock[]>(
+    "intro", reportId, [], `geo_intro_${reportId}`,
+  );
 
-  const load = (): IntroBlock[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (blocks: IntroBlock[]) => localStorage.setItem(storageKey, JSON.stringify(blocks));
-
-  const [blocks, setBlocks] = useState<IntroBlock[]>(load);
-
-  const update = (next: IntroBlock[]) => { setBlocks(next); persist(next); };
+  const update = (next: IntroBlock[]) => setBlocks(next);
 
   const addBlock = (type: "text" | "section" | "image" | "table") => {
     const block: IntroBlock = {

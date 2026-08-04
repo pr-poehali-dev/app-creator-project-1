@@ -1,4 +1,5 @@
 import type { MainSection, TableEntry, Illustration } from "./reportTypes";
+import { fetchBlock, saveBlock, type BlockName } from "@/lib/referencesApi";
 
 // ─── Синхронизация таблиц из текста в список таблиц ───────────────────────────
 //
@@ -22,19 +23,24 @@ export interface SyncedIllustration extends Illustration {
   sourceBlockId?: string;
 }
 
-function loadJson<T>(key: string): T[] {
-  try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; }
+// Списки таблиц и иллюстраций хранятся в общей БД.
+// Если блока ещё нет в БД — берём из браузера (перенос старых данных).
+async function loadList<T>(block: BlockName, reportId: string, legacyKey: string): Promise<T[]> {
+  try {
+    const fromDb = await fetchBlock<T[]>(block, reportId);
+    if (Array.isArray(fromDb)) return fromDb;
+  } catch { /* ignore */ }
+  try { return JSON.parse(localStorage.getItem(legacyKey) || "[]"); } catch { return []; }
 }
 
-function saveJson(key: string, data: unknown) {
-  localStorage.setItem(key, JSON.stringify(data));
+async function saveList(block: BlockName, reportId: string, data: unknown) {
+  try { await saveBlock(block, reportId, data); } catch { /* ignore */ }
 }
 
 // ─── Таблицы ──────────────────────────────────────────────────────────────────
 
-export function syncTablesFromText(reportId: string, sections: MainSection[]) {
-  const key = `geo_tables_${reportId}`;
-  const existing = loadJson<SyncedTableEntry>(key);
+export async function syncTablesFromText(reportId: string, sections: MainSection[]) {
+  const existing = await loadList<SyncedTableEntry>("tables", reportId, `geo_tables_${reportId}`);
 
   // Собираем все table-блоки из текста (плоский список)
   const textBlocks: { blockId: string; caption: string }[] = [];
@@ -79,14 +85,13 @@ export function syncTablesFromText(reportId: string, sections: MainSection[]) {
     number: idx + 1,
   }));
 
-  saveJson(key, merged);
+  await saveList("tables", reportId, merged);
 }
 
 // ─── Иллюстрации ──────────────────────────────────────────────────────────────
 
-export function syncIllustrationsFromText(reportId: string, sections: MainSection[]) {
-  const key = `geo_illustrations_${reportId}`;
-  const existing = loadJson<SyncedIllustration>(key);
+export async function syncIllustrationsFromText(reportId: string, sections: MainSection[]) {
+  const existing = await loadList<SyncedIllustration>("illustrations", reportId, `geo_illustrations_${reportId}`);
 
   // Собираем все image-блоки с реальным URL
   const textBlocks: { blockId: string; url: string; filename: string; caption: string; uploadedAt: string }[] = [];
@@ -125,12 +130,12 @@ export function syncIllustrationsFromText(reportId: string, sections: MainSectio
     number: idx + 1,
   }));
 
-  saveJson(key, merged);
+  await saveList("illustrations", reportId, merged);
 }
 
 // ─── Единая функция синхронизации ─────────────────────────────────────────────
 
-export function syncAllFromText(reportId: string, sections: MainSection[]) {
-  syncTablesFromText(reportId, sections);
-  syncIllustrationsFromText(reportId, sections);
+export async function syncAllFromText(reportId: string, sections: MainSection[]) {
+  await syncTablesFromText(reportId, sections);
+  await syncIllustrationsFromText(reportId, sections);
 }
