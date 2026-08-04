@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
+import { StudySection } from "@/components/report/StudySection";
 
 // ─── Комплект геологической информации ────────────────────────────────────────
 // Комплект состоит из 4 элементов. Отчёт уже реализован и открывается отдельно,
@@ -32,9 +33,9 @@ const KIT_ELEMENTS: {
   {
     id: "study",
     title: "Изученность",
-    subtitle: "Связана с методами реферата (виды и объёмы работ)",
+    subtitle: "Топооснова с координатами · связана с методами реферата",
     icon: "Search",
-    ready: false,
+    ready: true,
   },
   {
     id: "passport",
@@ -102,7 +103,9 @@ export default function KitPage({ report, customer, contractor, license, contrac
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-8">
-          {openEl ? (
+          {openEl?.id === "study" ? (
+            <StudySection reportId={report.id} />
+          ) : openEl ? (
             /* Пустой раздел-заготовка */
             <div className="animate-fade-in">
               <div className="flex items-center gap-3 mb-6">
