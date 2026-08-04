@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import ReportPage from "./ReportPage";
 import KitPage from "./KitPage";
-import type { Customer, Contractor, License, Contract, ReportData } from "@/types/geo";
-import { CustomersSection, ContractorsSection } from "@/components/geo/CustomersSections";
-import { LicensesSection, ContractsSection } from "@/components/geo/LicensesContracts";
+import type { ReportData } from "@/types/geo";
 import { ReportsSection } from "@/components/geo/ReportsSection";
 import { AppHeader, AppFooter } from "./AppHeader";
 import { AppSidebar, MobileTabs, ResetConfirmModal } from "./AppSidebar";
+import { useReferences } from "@/lib/useReferences";
+import Icon from "@/components/ui/icon";
 import {
   type Section,
-  INIT_CUSTOMERS, INIT_CONTRACTORS, INIT_LICENSES, INIT_CONTRACTS, INIT_REPORTS,
+  INIT_REPORTS,
   seedReport2, seedReport3, mergeSeedReports,
 } from "./initData";
 
@@ -51,21 +51,17 @@ export default function Index() {
   // Внутри открытого комплекта: "kit" — список из 4 элементов, "report" — сам отчёт
   const [kitView, setKitView] = useState<"kit" | "report">("kit");
   const [resetConfirm, setResetConfirm] = useState(false);
-  const [customers,    setCustomers]    = useLocalStorage<Customer[]>  ("geo_customers",    INIT_CUSTOMERS);
-  const [contractors,  setContractors]  = useLocalStorage<Contractor[]>("geo_contractors",  INIT_CONTRACTORS);
-  const [licenses,     setLicenses]     = useLocalStorage<License[]>   ("geo_licenses",     INIT_LICENSES);
-  const [contracts,    setContracts]    = useLocalStorage<Contract[]>  ("geo_contracts",    INIT_CONTRACTS);
-  const [reports,      setReports]      = useLocalStorage<ReportData[]>("geo_reports",      INIT_REPORTS);
+  const [reports, setReports] = useLocalStorage<ReportData[]>("geo_reports", INIT_REPORTS);
+
+  // Общая база справочников (PostgreSQL)
+  const refs = useReferences();
+  const { customers, contractors, licenses, contracts, save, remove, loading } = refs;
 
   const handleReset = () => {
     Object.keys(localStorage)
       .filter((k) => k.startsWith("geo_"))
       .forEach((k) => localStorage.removeItem(k));
-    localStorage.setItem("geo_customers",   JSON.stringify(INIT_CUSTOMERS));
-    localStorage.setItem("geo_contractors", JSON.stringify(INIT_CONTRACTORS));
-    localStorage.setItem("geo_licenses",    JSON.stringify(INIT_LICENSES));
-    localStorage.setItem("geo_contracts",   JSON.stringify(INIT_CONTRACTS));
-    localStorage.setItem("geo_reports",     JSON.stringify(INIT_REPORTS));
+    localStorage.setItem("geo_reports", JSON.stringify(INIT_REPORTS));
     seedReport2();
     seedReport3();
     window.location.reload();
@@ -93,12 +89,16 @@ export default function Index() {
     return (
       <KitPage
         report={openReport}
-        customer={customers.find((c) => c.id === openReport.customerId)}
-        contractor={contractors.find((c) => c.id === openReport.contractorId)}
-        license={licenses.find((l) => l.id === openReport.licenseId)}
-        contract={contracts.find((c) => c.id === openReport.contractId)}
+        customers={customers}
+        contractors={contractors}
+        licenses={licenses}
+        contracts={contracts}
+        refsLoading={loading}
+        onSaveRef={save}
+        onDeleteRef={remove}
         onBack={closeKit}
         onOpenReport={() => setKitView("report")}
+        onUpdateReport={(r) => setReports((prev) => prev.map((x) => x.id === r.id ? r : x))}
       />
     );
   }
@@ -128,11 +128,21 @@ export default function Index() {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-6 py-8 pt-20 md:pt-8">
-            {section === "reports"     && <ReportsSection     reports={reports}         setReports={setReports}         customers={customers}   contractors={contractors} licenses={licenses} contracts={contracts} onOpen={openKitById} />}
-            {section === "customers"   && <CustomersSection   customers={customers}     setCustomers={setCustomers} />}
-            {section === "contractors" && <ContractorsSection contractors={contractors} setContractors={setContractors} />}
-            {section === "licenses"    && <LicensesSection    licenses={licenses}       setLicenses={setLicenses}       customers={customers} />}
-            {section === "contracts"   && <ContractsSection   contracts={contracts}     setContracts={setContracts} />}
+            {loading && (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm font-mono mb-4">
+                <Icon name="Loader2" size={14} className="animate-spin" />
+                Загрузка общей базы справочников…
+              </div>
+            )}
+            <ReportsSection
+              reports={reports}
+              setReports={setReports}
+              customers={customers}
+              contractors={contractors}
+              licenses={licenses}
+              contracts={contracts}
+              onOpen={openKitById}
+            />
           </div>
         </main>
       </div>

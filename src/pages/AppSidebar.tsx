@@ -13,7 +13,7 @@ export function AppSidebar({ section, counts, onSectionChange, onResetRequest }:
   return (
     <aside className="w-52 border-r border-border bg-card/50 flex-shrink-0 hidden md:flex flex-col">
       <div className="px-4 py-3 border-b border-border">
-        <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Справочники</p>
+        <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Разделы</p>
       </div>
       <nav className="flex flex-col p-2 gap-0.5 flex-1">
         {NAV_ITEMS.map((item) => (

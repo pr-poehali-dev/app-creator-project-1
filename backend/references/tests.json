@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "name": "GET all references",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "POST upsert customer",
+      "method": "POST",
+      "path": "/",
+      "body": {"kind": "customers", "item": {"id": "test-cust-1", "name": "Тест ООО", "director": "Иванов", "inn": "123", "address": "Москва"}},
+      "expectedStatus": 200,
+      "expectedBody": {"item": {"id": "test-cust-1", "name": "Тест ООО"}},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "DELETE customer",
+      "method": "DELETE",
+      "path": "/",
+      "body": {"kind": "customers", "id": "test-cust-1"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

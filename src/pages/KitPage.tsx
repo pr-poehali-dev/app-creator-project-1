@@ -2,12 +2,13 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
 import { StudySection } from "@/components/report/StudySection";
+import { KitReferences } from "./KitReferences";
+import type { RefKind } from "@/lib/referencesApi";
 
 // ─── Комплект геологической информации ────────────────────────────────────────
-// Комплект состоит из 4 элементов. Отчёт уже реализован и открывается отдельно,
-// остальные три пока пустые заготовки.
+// Комплект: общие сведения (справочники из общей БД) + 4 элемента.
 
-type KitElementId = "report" | "primary" | "study" | "passport";
+type KitElementId = "refs" | "report" | "primary" | "study" | "passport";
 
 const KIT_ELEMENTS: {
   id: KitElementId;
@@ -16,6 +17,13 @@ const KIT_ELEMENTS: {
   icon: string;
   ready: boolean;
 }[] = [
+  {
+    id: "refs",
+    title: "Общие сведения",
+    subtitle: "Заказчик, исполнитель, лицензия, контракт — из общей базы",
+    icon: "ClipboardList",
+    ready: true,
+  },
   {
     id: "report",
     title: "Отчёт",
@@ -48,16 +56,25 @@ const KIT_ELEMENTS: {
 
 interface KitPageProps {
   report: ReportData;
-  customer?: Customer;
-  contractor?: Contractor;
-  license?: License;
-  contract?: Contract;
+  customers: Customer[];
+  contractors: Contractor[];
+  licenses: License[];
+  contracts: Contract[];
+  refsLoading: boolean;
+  onSaveRef: <T extends { id: string }>(kind: RefKind, item: T) => Promise<void>;
+  onDeleteRef: (kind: RefKind, id: string) => Promise<void>;
   onBack: () => void;
   onOpenReport: () => void;
+  onUpdateReport: (r: ReportData) => void;
 }
 
-export default function KitPage({ report, customer, contractor, license, contract, onBack, onOpenReport }: KitPageProps) {
+export default function KitPage({ report, customers, contractors, licenses, contracts, refsLoading, onSaveRef, onBack, onOpenReport, onUpdateReport }: KitPageProps) {
   const [openElement, setOpenElement] = useState<Exclude<KitElementId, "report"> | null>(null);
+
+  const customer = customers.find((c) => c.id === report.customerId);
+  const contractor = contractors.find((c) => c.id === report.contractorId);
+  const license = licenses.find((l) => l.id === report.licenseId);
+  const contract = contracts.find((c) => c.id === report.contractId);
 
   const openEl = KIT_ELEMENTS.find((e) => e.id === openElement);
 
@@ -103,7 +120,18 @@ export default function KitPage({ report, customer, contractor, license, contrac
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-8">
-          {openEl?.id === "study" ? (
+          {openEl?.id === "refs" ? (
+            <KitReferences
+              report={report}
+              customers={customers}
+              contractors={contractors}
+              licenses={licenses}
+              contracts={contracts}
+              loading={refsLoading}
+              onSaveRef={onSaveRef}
+              onUpdateReport={onUpdateReport}
+            />
+          ) : openEl?.id === "study" ? (
             <StudySection reportId={report.id} />
           ) : openEl ? (
             /* Пустой раздел-заготовка */
@@ -125,7 +153,7 @@ export default function KitPage({ report, customer, contractor, license, contrac
             <div className="animate-fade-in">
               <div className="mb-6">
                 <h1 className="font-display text-xl tracking-wider uppercase text-foreground">Комплект геологической информации</h1>
-                <p className="font-mono text-xs text-muted-foreground mt-1">4 элемента комплекта</p>
+                <p className="font-mono text-xs text-muted-foreground mt-1">Общие сведения и 4 элемента комплекта</p>
               </div>
 
               {/* Meta */}

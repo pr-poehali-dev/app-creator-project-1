@@ -8,10 +8,6 @@ export type Section = "customers" | "contractors" | "licenses" | "contracts" | "
 
 export const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
   { id: "reports",     label: "Комплекты",   icon: "Layers"    },
-  { id: "customers",   label: "Заказчики",    icon: "Building2" },
-  { id: "contractors", label: "Исполнители",  icon: "HardHat"   },
-  { id: "licenses",    label: "Лицензии",     icon: "FileKey"   },
-  { id: "contracts",   label: "Контракты",    icon: "FileText"  },
 ];
 
 export const SOON_ITEMS: { icon: string; label: string }[] = [
@@ -146,11 +142,9 @@ function mergeById<T extends { id: string }>(key: string, seed: T[]) {
  * версии у пользователей со старым набором данных.
  */
 export function mergeSeedReports() {
+  // Справочники (заказчики, исполнители, лицензии, контракты) теперь хранятся
+  // в общей БД, поэтому в localStorage мёржим только список комплектов.
   mergeById("geo_reports", INIT_REPORTS);
-  mergeById("geo_customers", INIT_CUSTOMERS);
-  mergeById("geo_contractors", INIT_CONTRACTORS);
-  mergeById("geo_licenses", INIT_LICENSES);
-  mergeById("geo_contracts", INIT_CONTRACTS);
 }
 
 export const INIT_REPORTS: ReportData[] = [
