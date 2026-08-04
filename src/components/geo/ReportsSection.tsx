@@ -136,7 +136,7 @@ export function ReportsSection({
 
   return (
     <div className="animate-fade-in">
-      <SectionHeader count={reports.length} title="Общие данные отчёта" subtitle="GOST 53579-2009 · Титульный лист" onAdd={openAdd} />
+      <SectionHeader count={reports.length} title="Комплекты геологической информации" subtitle="Отчёт · Первичная геол. информация · Изученность · Паспорт ГКМ" onAdd={openAdd} />
       <div className="space-y-2">
         {reports.length === 0 && (
           <div className="border border-dashed border-border py-10 text-center text-muted-foreground text-sm font-mono">

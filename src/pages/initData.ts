@@ -7,7 +7,7 @@ export type Section = "customers" | "contractors" | "licenses" | "contracts" | "
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 
 export const NAV_ITEMS: { id: Section; label: string; icon: string }[] = [
-  { id: "reports",     label: "Отчёты",      icon: "BookOpen"  },
+  { id: "reports",     label: "Комплекты",   icon: "Layers"    },
   { id: "customers",   label: "Заказчики",    icon: "Building2" },
   { id: "contractors", label: "Исполнители",  icon: "HardHat"   },
   { id: "licenses",    label: "Лицензии",     icon: "FileKey"   },

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ReportPage from "./ReportPage";
+import KitPage from "./KitPage";
 import type { Customer, Contractor, License, Contract, ReportData } from "@/types/geo";
 import { CustomersSection, ContractorsSection } from "@/components/geo/CustomersSections";
 import { LicensesSection, ContractsSection } from "@/components/geo/LicensesContracts";
@@ -47,6 +48,8 @@ export default function Index() {
 
   const [section, setSection] = useState<Section>("reports");
   const [openReportId, setOpenReportId] = useState<string | null>(null);
+  // Внутри открытого комплекта: "kit" — список из 4 элементов, "report" — сам отчёт
+  const [kitView, setKitView] = useState<"kit" | "report">("kit");
   const [resetConfirm, setResetConfirm] = useState(false);
   const [customers,    setCustomers]    = useLocalStorage<Customer[]>  ("geo_customers",    INIT_CUSTOMERS);
   const [contractors,  setContractors]  = useLocalStorage<Contractor[]>("geo_contractors",  INIT_CONTRACTORS);
@@ -68,18 +71,34 @@ export default function Index() {
     window.location.reload();
   };
 
+  const closeKit = () => { setOpenReportId(null); setKitView("kit"); };
+  const openKitById = (id: string) => { setKitView("kit"); setOpenReportId(id); };
+
   const openReport = reports.find((r) => r.id === openReportId);
 
   if (openReport) {
+    if (kitView === "report") {
+      return (
+        <ReportPage
+          report={openReport}
+          customers={customers}
+          contractors={contractors}
+          licenses={licenses}
+          contracts={contracts}
+          onBack={() => setKitView("kit")}
+          onUpdateReport={(r) => setReports((prev) => prev.map((x) => x.id === r.id ? r : x))}
+        />
+      );
+    }
     return (
-      <ReportPage
+      <KitPage
         report={openReport}
-        customers={customers}
-        contractors={contractors}
-        licenses={licenses}
-        contracts={contracts}
-        onBack={() => setOpenReportId(null)}
-        onUpdateReport={(r) => setReports((prev) => prev.map((x) => x.id === r.id ? r : x))}
+        customer={customers.find((c) => c.id === openReport.customerId)}
+        contractor={contractors.find((c) => c.id === openReport.contractorId)}
+        license={licenses.find((l) => l.id === openReport.licenseId)}
+        contract={contracts.find((c) => c.id === openReport.contractId)}
+        onBack={closeKit}
+        onOpenReport={() => setKitView("report")}
       />
     );
   }
@@ -109,7 +128,7 @@ export default function Index() {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-6 py-8 pt-20 md:pt-8">
-            {section === "reports"     && <ReportsSection     reports={reports}         setReports={setReports}         customers={customers}   contractors={contractors} licenses={licenses} contracts={contracts} onOpen={setOpenReportId} />}
+            {section === "reports"     && <ReportsSection     reports={reports}         setReports={setReports}         customers={customers}   contractors={contractors} licenses={licenses} contracts={contracts} onOpen={openKitById} />}
             {section === "customers"   && <CustomersSection   customers={customers}     setCustomers={setCustomers} />}
             {section === "contractors" && <ContractorsSection contractors={contractors} setContractors={setContractors} />}
             {section === "licenses"    && <LicensesSection    licenses={licenses}       setLicenses={setLicenses}       customers={customers} />}
