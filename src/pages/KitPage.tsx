@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
 import { StudySection } from "@/components/report/StudySection";
+import { PassportSection } from "@/components/report/PassportSection";
 import { KitReferences } from "./KitReferences";
 import type { RefKind } from "@/lib/referencesApi";
 
@@ -48,9 +49,9 @@ const KIT_ELEMENTS: {
   {
     id: "passport",
     title: "Паспорт ГКМ",
-    subtitle: "Паспорт государственного кадастра месторождений",
+    subtitle: "Государственный кадастр месторождений · все массивы, автозаполнение",
     icon: "FileText",
-    ready: false,
+    ready: true,
   },
 ];
 
@@ -133,6 +134,8 @@ export default function KitPage({ report, customers, contractors, licenses, cont
             />
           ) : openEl?.id === "study" ? (
             <StudySection reportId={report.id} />
+          ) : openEl?.id === "passport" ? (
+            <PassportSection report={report} customer={customer} contractor={contractor} license={license} />
           ) : openEl ? (
             /* Пустой раздел-заготовка */
             <div className="animate-fade-in">

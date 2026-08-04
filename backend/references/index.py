@@ -56,9 +56,51 @@ def _fetch_all(cur):
     return result
 
 
+def _passport_response(status, payload):
+    return {'statusCode': status, 'headers': {**CORS, 'Content-Type': 'application/json'},
+            'body': json.dumps(payload, ensure_ascii=False, default=str)}
+
+
+def _handle_passport(method, cur, event, body):
+    # GET: reportId из query. POST/DELETE: reportId из тела.
+    if method == 'GET':
+        qs = event.get('queryStringParameters') or {}
+        report_id = str(qs.get('reportId') or '')
+        if not report_id:
+            return _passport_response(400, {'error': 'reportId required'})
+        cur.execute("SELECT report_id, massif, data FROM gkm_passports WHERE report_id = %s", (report_id,))
+        row = cur.fetchone()
+        if not row:
+            return _passport_response(200, {'passport': None})
+        return _passport_response(200, {'passport': {'reportId': row['report_id'], 'massif': row['massif'], 'data': row['data']}})
+
+    report_id = str(body.get('reportId') or '')
+    if not report_id:
+        return _passport_response(400, {'error': 'reportId required'})
+
+    if method == 'DELETE':
+        cur.execute("DELETE FROM gkm_passports WHERE report_id = %s", (report_id,))
+        return _passport_response(200, {'ok': True})
+
+    if method == 'POST':
+        massif = str(body.get('massif') or '')
+        data = body.get('data') or {}
+        cur.execute(
+            "INSERT INTO gkm_passports (report_id, massif, data) VALUES (%s, %s, %s) "
+            "ON CONFLICT (report_id) DO UPDATE SET massif = EXCLUDED.massif, data = EXCLUDED.data, updated_at = now() "
+            "RETURNING report_id, massif, data",
+            (report_id, massif, json.dumps(data, ensure_ascii=False)),
+        )
+        row = cur.fetchone()
+        return _passport_response(200, {'passport': {'reportId': row['report_id'], 'massif': row['massif'], 'data': row['data']}})
+
+    return _passport_response(405, {'error': 'method not allowed'})
+
+
 def handler(event, context):
-    '''Общая база справочников: заказчики, исполнители, лицензии, контракты.
-    GET — вернуть все справочники. POST — создать/обновить запись (upsert). DELETE — удалить запись.'''
+    '''Общая база: справочники (заказчики, исполнители, лицензии, контракты) и паспорта ГКМ.
+    GET — все справочники, либо паспорт (resource=passport&reportId=..).
+    POST — upsert записи справочника или паспорта (resource=passport). DELETE — удалить.'''
     method = event.get('httpMethod', 'GET')
     if method == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS, 'body': ''}
@@ -68,12 +110,21 @@ def handler(event, context):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     try:
+        body = {}
+        if method in ('POST', 'DELETE'):
+            body = json.loads(event.get('body') or '{}')
+
+        # Роутинг на паспорта ГКМ
+        qs = event.get('queryStringParameters') or {}
+        is_passport = (qs.get('resource') == 'passport') or (body.get('resource') == 'passport')
+        if is_passport:
+            return _handle_passport(method, cur, event, body)
+
         if method == 'GET':
             data = _fetch_all(cur)
             return {'statusCode': 200, 'headers': {**CORS, 'Content-Type': 'application/json'},
                     'body': json.dumps(data, ensure_ascii=False, default=str)}
 
-        body = json.loads(event.get('body') or '{}')
         kind = body.get('kind')
         if kind not in KINDS:
             return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'unknown kind'})}

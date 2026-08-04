@@ -23,6 +23,32 @@
       "expectedStatus": 200,
       "expectedBody": {"ok": true},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST upsert passport",
+      "method": "POST",
+      "path": "/",
+      "body": {"resource": "passport", "reportId": "test-rep-1", "massif": "Z", "data": {"objectName": "Тестовый участок"}},
+      "expectedStatus": 200,
+      "expectedBody": {"passport": {"reportId": "test-rep-1", "massif": "Z"}},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET passport",
+      "method": "GET",
+      "path": "/?resource=passport&reportId=test-rep-1",
+      "expectedStatus": 200,
+      "expectedBody": {"passport": {"reportId": "test-rep-1", "massif": "Z"}},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "DELETE passport",
+      "method": "DELETE",
+      "path": "/",
+      "body": {"resource": "passport", "reportId": "test-rep-1"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
     }
   ]
 }

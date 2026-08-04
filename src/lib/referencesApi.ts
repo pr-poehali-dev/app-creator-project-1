@@ -47,3 +47,29 @@ export async function deleteReference(kind: RefKind, id: string): Promise<void> 
 export function makeRefId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
+
+// ── Паспорт ГКМ ───────────────────────────────────────────────────────────────
+
+export interface PassportRecord {
+  reportId: string;
+  massif: string;
+  data: Record<string, string>;
+}
+
+export async function fetchPassport(reportId: string): Promise<PassportRecord | null> {
+  const res = await fetch(`${API_URL}?resource=passport&reportId=${encodeURIComponent(reportId)}`, { method: "GET" });
+  if (!res.ok) throw new Error(`Не удалось загрузить паспорт: ${res.status}`);
+  const data = await res.json();
+  return data.passport || null;
+}
+
+export async function savePassport(record: PassportRecord): Promise<PassportRecord> {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resource: "passport", ...record }),
+  });
+  if (!res.ok) throw new Error(`Не удалось сохранить паспорт: ${res.status}`);
+  const data = await res.json();
+  return data.passport as PassportRecord;
+}
