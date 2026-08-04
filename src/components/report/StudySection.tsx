@@ -3,32 +3,50 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "re
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Icon from "@/components/ui/icon";
+import type { WorkMethod } from "./reportTypes";
 
 // ─── Изученность: топооснова (Leaflet + OSM) с нанесением координат ─────────────
+// Точки привязываются к методам («виды и объёмы работ») из реферата отчёта.
 
 export interface StudyPoint {
   id: string;
   name: string;
   lat: number;
   lon: number;
+  methodId?: string;
 }
 
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-// Простая маркерная иконка через divIcon (без внешних png-ассетов Leaflet)
-const markerIcon = L.divIcon({
-  className: "",
-  html: '<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;background:#f5a623;border:2px solid #1a1a1a;transform:rotate(-45deg);box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>',
-  iconSize: [16, 16],
-  iconAnchor: [8, 16],
-  popupAnchor: [0, -16],
-});
+// Палитра цветов для методов — точки красятся в цвет своего метода
+const METHOD_COLORS = ["#f5a623", "#4a90d9", "#7ed321", "#d0021b", "#9013fe", "#50e3c2", "#f8564e", "#b8e986"];
+const colorForMethod = (methods: WorkMethod[], methodId?: string) => {
+  const idx = methods.findIndex((m) => m.id === methodId);
+  return idx >= 0 ? METHOD_COLORS[idx % METHOD_COLORS.length] : "#8a8a8a";
+};
+
+const markerIcon = (color: string) =>
+  L.divIcon({
+    className: "",
+    html: `<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;background:${color};border:2px solid #1a1a1a;transform:rotate(-45deg);box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 16],
+    popupAnchor: [0, -16],
+  });
 
 const DEFAULT_CENTER: [number, number] = [61.5, 65.5]; // ХМАО как нейтральный центр
 const load = (id: string): StudyPoint[] => {
   try {
     const s = localStorage.getItem(`geo_study_${id}`);
     return s ? JSON.parse(s) : [];
+  } catch { return []; }
+};
+
+const loadMethods = (id: string): WorkMethod[] => {
+  try {
+    const s = localStorage.getItem(`geo_abstract_${id}`);
+    const data = s ? JSON.parse(s) : null;
+    return Array.isArray(data?.methods) ? data.methods : [];
   } catch { return []; }
 };
 
@@ -50,22 +68,26 @@ function Recenter({ points }: { points: StudyPoint[] }) {
 
 export function StudySection({ reportId }: { reportId: string }) {
   const [points, setPoints] = useState<StudyPoint[]>(() => load(reportId));
+  const [methods] = useState<WorkMethod[]>(() => loadMethods(reportId));
   const [name, setName] = useState("");
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
+  const [methodId, setMethodId] = useState<string>("");
 
   useEffect(() => {
     localStorage.setItem(`geo_study_${reportId}`, JSON.stringify(points));
   }, [points, reportId]);
 
+  const methodName = (id?: string) => methods.find((m) => m.id === id)?.name;
+
   const center: [number, number] = points.length
     ? [points[0].lat, points[0].lon]
     : DEFAULT_CENTER;
 
-  const addPoint = (la: number, lo: number, nm?: string) => {
+  const addPoint = (la: number, lo: number, nm?: string, mId?: string) => {
     setPoints((prev) => [
       ...prev,
-      { id: newId(), name: nm?.trim() || `Точка ${prev.length + 1}`, lat: la, lon: lo },
+      { id: newId(), name: nm?.trim() || `Точка ${prev.length + 1}`, lat: la, lon: lo, methodId: mId || undefined },
     ]);
   };
 
@@ -74,12 +96,14 @@ export function StudySection({ reportId }: { reportId: string }) {
     const lo = parseFloat(lon.replace(",", "."));
     if (Number.isNaN(la) || Number.isNaN(lo)) return;
     if (la < -90 || la > 90 || lo < -180 || lo > 180) return;
-    addPoint(la, lo, name);
+    addPoint(la, lo, name, methodId);
     setName(""); setLat(""); setLon("");
   };
 
   const rename = (id: string, nm: string) =>
     setPoints((prev) => prev.map((p) => (p.id === id ? { ...p, name: nm } : p)));
+  const setPointMethod = (id: string, mId: string) =>
+    setPoints((prev) => prev.map((p) => (p.id === id ? { ...p, methodId: mId || undefined } : p)));
   const remove = (id: string) =>
     setPoints((prev) => prev.filter((p) => p.id !== id));
 
@@ -94,7 +118,7 @@ export function StudySection({ reportId }: { reportId: string }) {
       </div>
 
       {/* Ввод координат */}
-      <div className="border border-border bg-card/50 p-3 mb-4 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] items-end">
+      <div className="border border-border bg-card/50 p-3 mb-3 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] items-end">
         <label className="flex flex-col gap-1">
           <span className="font-mono text-xs text-muted-foreground/70 uppercase tracking-widest">Название точки</span>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Скв. 1" className="bg-background border border-border px-2 py-1.5 text-sm text-foreground focus:border-geo-amber outline-none" />
@@ -111,10 +135,36 @@ export function StudySection({ reportId }: { reportId: string }) {
           <Icon name="Plus" size={13} />
           Добавить
         </button>
+        <label className="flex flex-col gap-1 sm:col-span-4">
+          <span className="font-mono text-xs text-muted-foreground/70 uppercase tracking-widest">Вид работ (метод из реферата)</span>
+          <select value={methodId} onChange={(e) => setMethodId(e.target.value)} className="bg-background border border-border px-2 py-1.5 text-sm text-foreground focus:border-geo-amber outline-none">
+            <option value="">— без привязки —</option>
+            {methods.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}{m.volume ? ` · ${m.volume} ${m.unit}` : ""}</option>
+            ))}
+          </select>
+        </label>
       </div>
-      <p className="font-mono text-xs text-muted-foreground/50 mb-4">
-        Десятичные градусы (широта/долгота). Или кликните по карте — координаты подставятся автоматически.
+      <p className="font-mono text-xs text-muted-foreground/50 mb-3">
+        Десятичные градусы (широта/долгота). Или кликните по карте — точка добавится с выбранным выше видом работ.
       </p>
+
+      {/* Легенда методов */}
+      {methods.length > 0 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4 border border-border bg-card/30 px-3 py-2">
+          {methods.map((m, i) => (
+            <div key={m.id} className="flex items-center gap-1.5">
+              <span className="inline-block w-3 h-3 rounded-full flex-shrink-0" style={{ background: METHOD_COLORS[i % METHOD_COLORS.length] }} />
+              <span className="font-mono text-xs text-muted-foreground/80">{m.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {methods.length === 0 && (
+        <div className="border border-dashed border-border px-3 py-2 mb-4 text-xs font-mono text-muted-foreground/60">
+          В реферате отчёта пока нет методов (виды и объёмы работ) — добавьте их, чтобы привязывать точки.
+        </div>
+      )}
 
       {/* Карта */}
       <div className="border border-border overflow-hidden" style={{ height: 440 }}>
@@ -123,14 +173,15 @@ export function StudySection({ reportId }: { reportId: string }) {
             attribution='&copy; OpenStreetMap'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <ClickHandler onClick={(la, lo) => addPoint(la, lo)} />
+          <ClickHandler onClick={(la, lo) => addPoint(la, lo, undefined, methodId)} />
           <Recenter points={points} />
           {points.map((p) => (
-            <Marker key={p.id} position={[p.lat, p.lon]} icon={markerIcon}>
+            <Marker key={p.id} position={[p.lat, p.lon]} icon={markerIcon(colorForMethod(methods, p.methodId))}>
               <Popup>
                 <div style={{ fontSize: 12 }}>
                   <b>{p.name}</b><br />
                   {p.lat.toFixed(5)}, {p.lon.toFixed(5)}
+                  {methodName(p.methodId) && <><br /><span style={{ color: "#888" }}>Вид работ: {methodName(p.methodId)}</span></>}
                 </div>
               </Popup>
             </Marker>
@@ -152,12 +203,25 @@ export function StudySection({ reportId }: { reportId: string }) {
             {points.map((p, i) => (
               <div key={p.id} className="flex items-center gap-2 border border-border bg-card/50 px-3 py-2">
                 <span className="font-mono text-xs text-muted-foreground/40 w-5">{String(i + 1).padStart(2, "0")}</span>
+                <span className="inline-block w-3 h-3 rounded-full flex-shrink-0" style={{ background: colorForMethod(methods, p.methodId) }} title={methodName(p.methodId) || "без привязки"} />
                 <input
                   value={p.name}
                   onChange={(e) => rename(p.id, e.target.value)}
-                  className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-geo-amber outline-none text-sm text-foreground py-0.5"
+                  className="flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-border focus:border-geo-amber outline-none text-sm text-foreground py-0.5"
                 />
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                {methods.length > 0 && (
+                  <select
+                    value={p.methodId || ""}
+                    onChange={(e) => setPointMethod(p.id, e.target.value)}
+                    className="max-w-[180px] bg-background border border-border px-1.5 py-1 text-xs text-foreground focus:border-geo-amber outline-none"
+                  >
+                    <option value="">— вид работ —</option>
+                    {methods.map((m) => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                )}
+                <span className="font-mono text-xs text-muted-foreground tabular-nums hidden sm:inline">
                   {p.lat.toFixed(5)}, {p.lon.toFixed(5)}
                 </span>
                 <button onClick={() => remove(p.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
