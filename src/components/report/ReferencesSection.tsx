@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { ReferenceEntry, ReferenceKind } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -200,20 +201,16 @@ export function ReferencesSection({ reportId, secrecy, responsible, contractor, 
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_references_${reportId}`;
-
-  const load = (): ReferenceEntry[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (items: ReferenceEntry[]) => localStorage.setItem(storageKey, JSON.stringify(items));
-
-  const [items, setItems] = useState<ReferenceEntry[]>(load);
+  // Список источников хранится в общей БД (с автопереносом из браузера)
+  const { value: items, setValue: setItems } = useReportBlock<ReferenceEntry[]>(
+    "references", reportId, [], `geo_references_${reportId}`,
+  );
   const [modal, setModal] = useState<null | "add" | ReferenceEntry>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [defaultKind, setDefaultKind] = useState<ReferenceKind>("published");
   const [search, setSearch] = useState("");
 
-  const update = (next: ReferenceEntry[]) => { setItems(next); persist(next); };
+  const update = (next: ReferenceEntry[]) => setItems(next);
 
   const openAdd = (kind: ReferenceKind) => { setDefaultKind(kind); setModal("add"); };
   const openEdit = (entry: ReferenceEntry) => setModal(entry);

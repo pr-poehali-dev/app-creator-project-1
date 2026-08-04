@@ -101,7 +101,7 @@ export type BlockName =
   | "conclusion" | "terms" | "references" | "study" | "illustrations" | "tables"
   | "text_appendices" | "graphic_appendices" | "text_app_files" | "graphic_app_files"
   | "metrological" | "patent" | "review" | "protocol" | "cost" | "transfer_acts"
-  | "contents_pages";
+  | "contents_pages" | "contents_custom";
 
 export async function fetchBlock<T>(block: BlockName, reportId: string): Promise<T | null> {
   const url = `${API_URL}?resource=block&block=${block}&reportId=${encodeURIComponent(reportId)}`;

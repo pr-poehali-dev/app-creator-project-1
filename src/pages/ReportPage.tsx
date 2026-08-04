@@ -42,7 +42,7 @@ export default function ReportPage({ report, customers, contractors, licenses, c
   const handleExportPdf = async () => {
     setPdfExporting(true);
     try {
-      const data = collectPdfData(report, customers, contractors, licenses, contracts);
+      const data = await collectPdfData(report, customers, contractors, licenses, contracts);
       await exportToPdf(data);
     } finally {
       setPdfExporting(false);

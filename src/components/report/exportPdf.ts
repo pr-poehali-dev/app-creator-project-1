@@ -1,44 +1,56 @@
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
 import type { LabelData, TitlePageData, AbstractData, IntroBlock, MainSection, ReferenceEntry, TermEntry, TableEntry, TextAppendix, GraphicAppendix } from "./reportTypes";
 import { DEFAULT_LABEL, DEFAULT_TITLE_PAGE, DEFAULT_ABSTRACT } from "./reportTypes";
-import { buildContents } from "./ContentsSection";
+import { buildContentsAsync } from "./ContentsSection";
+import { fetchBlock, type BlockName } from "@/lib/referencesApi";
 import type { PdfData } from "./ReportPdfView";
 
-function loadJson<T>(key: string, fallback: T): T {
+// Данные для PDF берём из общей БД, при недоступности — из браузера
+async function loadJson<T>(block: BlockName, id: string, legacyKey: string, fallback: T): Promise<T> {
   try {
-    const v = localStorage.getItem(key);
+    const v = await fetchBlock<T>(block, id);
+    if (v !== null && v !== undefined) return v;
+  } catch { /* ignore */ }
+  try {
+    const v = localStorage.getItem(`${legacyKey}_${id}`);
     return v ? JSON.parse(v) : fallback;
   } catch {
     return fallback;
   }
 }
 
-export function collectPdfData(
+export async function collectPdfData(
   report: ReportData,
   customers: Customer[],
   contractors: Contractor[],
   licenses: License[],
   contracts: Contract[],
-): PdfData {
+): Promise<PdfData> {
   const id = report.id;
   const customer   = customers.find((c) => c.id === report.customerId);
   const contractor = contractors.find((c) => c.id === report.contractorId);
   const license    = licenses.find((l) => l.id === report.licenseId);
   const contract   = contracts.find((c) => c.id === report.contractId);
 
-  const labelData    = loadJson<LabelData>(`geo_label_${id}`, DEFAULT_LABEL);
-  const titleData    = loadJson<TitlePageData>(`geo_title_${id}`, DEFAULT_TITLE_PAGE);
-  const abstractData = loadJson<AbstractData>(`geo_abstract_${id}`, DEFAULT_ABSTRACT);
+  const [
+    labelData, titleData, abstractData,
+    references, terms, tables, textAppendices, graphicAppendices,
+    introBlocks, mainSections, conclusionBlocks,
+  ] = await Promise.all([
+    loadJson<LabelData>("label", id, "geo_label", DEFAULT_LABEL),
+    loadJson<TitlePageData>("title_page", id, "geo_title", DEFAULT_TITLE_PAGE),
+    loadJson<AbstractData>("abstract", id, "geo_abstract", DEFAULT_ABSTRACT),
+    loadJson<ReferenceEntry[]>("references", id, "geo_references", []),
+    loadJson<TermEntry[]>("terms", id, "geo_terms", []),
+    loadJson<TableEntry[]>("tables", id, "geo_tables", []),
+    loadJson<TextAppendix[]>("text_appendices", id, "geo_text_appendices", []),
+    loadJson<GraphicAppendix[]>("graphic_appendices", id, "geo_graphic_appendices", []),
+    loadJson<IntroBlock[]>("intro", id, "geo_intro", []),
+    loadJson<MainSection[]>("main_text", id, "geo_main_text", []),
+    loadJson<IntroBlock[]>("conclusion", id, "geo_conclusion", []),
+  ]);
 
-  const contents        = buildContents(id, report, contractor, contractors);
-  const references      = loadJson<ReferenceEntry[]>(`geo_references_${id}`, []);
-  const terms           = loadJson<TermEntry[]>(`geo_terms_${id}`, []);
-  const tables          = loadJson<TableEntry[]>(`geo_tables_${id}`, []);
-  const textAppendices  = loadJson<TextAppendix[]>(`geo_text_appendices_${id}`, []);
-  const graphicAppendices = loadJson<GraphicAppendix[]>(`geo_graphic_appendices_${id}`, []);
-  const introBlocks     = loadJson<IntroBlock[]>(`geo_intro_${id}`, []);
-  const mainSections    = loadJson<MainSection[]>(`geo_main_text_${id}`, []);
-  const conclusionBlocks = loadJson<IntroBlock[]>(`geo_conclusion_${id}`, []);
+  const contents = await buildContentsAsync(id, report, contractor, contractors);
 
   return {
     report, customer, contractor, license, contract,

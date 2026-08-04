@@ -169,6 +169,7 @@ BLOCKS = {
     'cost': 'report_cost',
     'transfer_acts': 'report_transfer_acts',
     'contents_pages': 'report_contents_pages',
+    'contents_custom': 'report_contents_custom',
 }
 
 

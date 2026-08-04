@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { TermEntry } from "./reportTypes";
 import { SectionMeta } from "./SectionMeta";
 import type { Secrecy, Contractor } from "@/types/geo";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 export function TermsSection({ reportId, secrecy, responsible, contractor, contractors }: {
   reportId: string;
@@ -11,14 +12,10 @@ export function TermsSection({ reportId, secrecy, responsible, contractor, contr
   contractor?: Contractor;
   contractors?: Contractor[];
 }) {
-  const storageKey = `geo_terms_${reportId}`;
-
-  const load = (): TermEntry[] => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
-  };
-  const persist = (items: TermEntry[]) => localStorage.setItem(storageKey, JSON.stringify(items));
-
-  const [items, setItems] = useState<TermEntry[]>(load);
+  // Перечень терминов хранится в общей БД (с автопереносом из браузера)
+  const { value: items, setValue: setItems } = useReportBlock<TermEntry[]>(
+    "terms", reportId, [], `geo_terms_${reportId}`,
+  );
   const [modal, setModal] = useState<null | "add" | TermEntry>(null);
   const [form, setForm] = useState({ term: "", definition: "" });
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -66,14 +63,12 @@ export function TermsSection({ reportId, secrecy, responsible, contractor, contr
           : item
       );
     }
-    persist(next);
     setItems(next);
     setModal(null);
   };
 
   const removeItem = (id: string) => {
     const next = items.filter((i) => i.id !== id);
-    persist(next);
     setItems(next);
     setDeleteId(null);
   };

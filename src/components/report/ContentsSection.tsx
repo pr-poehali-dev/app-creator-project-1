@@ -2,24 +2,75 @@ import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import type { ReportData, Contractor } from "@/types/geo";
 import type { AbstractData, TaskFile, ContentsEntry, TabId, LabelData, TitlePageData } from "./reportTypes";
+import { fetchBlock, type BlockName } from "@/lib/referencesApi";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── buildContents ────────────────────────────────────────────────────────────
 
-export function buildContents(
+/** Пункт содержания, добавленный вручную. Активируется в отчёте и обязателен к заполнению. */
+export interface CustomContentsEntry {
+  id: string;
+  title: string;
+  level: 0 | 1;
+  content?: string;
+}
+
+/** Загружает все блоки отчёта из БД (с запасным вариантом из браузера). */
+async function loadAllBlocks(reportId: string) {
+  const names: BlockName[] = [
+    "label", "title_page", "abstract", "task_file", "intro", "main_text", "conclusion",
+    "terms", "references", "illustrations", "tables", "text_appendices", "graphic_appendices",
+    "metrological", "patent", "review", "protocol", "cost", "transfer_acts",
+    "text_app_files", "graphic_app_files", "contents_custom",
+  ];
+  const legacy: Record<string, string> = {
+    label: "geo_label", title_page: "geo_title", abstract: "geo_abstract", task_file: "geo_task_file",
+    intro: "geo_intro", main_text: "geo_main_text", conclusion: "geo_conclusion", terms: "geo_terms",
+    references: "geo_references", illustrations: "geo_illustrations", tables: "geo_tables",
+    text_appendices: "geo_text_appendices", graphic_appendices: "geo_graphic_appendices",
+    metrological: "geo_metrological", patent: "geo_patent", review: "geo_review",
+    protocol: "geo_protocol", cost: "geo_cost", transfer_acts: "geo_transfer_acts",
+    text_app_files: "geo_text_app_files", graphic_app_files: "geo_graphic_app_files",
+  };
+
+  const result: Record<string, unknown> = {};
+  await Promise.all(names.map(async (n) => {
+    try {
+      const v = await fetchBlock<unknown>(n, reportId);
+      if (v !== null && v !== undefined) { result[n] = v; return; }
+    } catch { /* ignore */ }
+    const key = legacy[n];
+    if (key) {
+      try { result[n] = JSON.parse(localStorage.getItem(`${key}_${reportId}`) || "null"); } catch { /* ignore */ }
+    }
+  }));
+  return result;
+}
+
+/** Собирает содержание, загрузив все блоки отчёта из БД. */
+export async function buildContentsAsync(
   reportId: string,
   report: ReportData,
   contractor?: Contractor,
   contractors?: Contractor[],
-): ContentsEntry[] {
-  const load = (key: string) => {
-    try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; }
-  };
+): Promise<ContentsEntry[]> {
+  const blocks = await loadAllBlocks(reportId);
+  return buildContents(blocks, report, contractor, contractors);
+}
 
-  const label: LabelData | null       = load(`geo_label_${reportId}`);
-  const title: TitlePageData | null   = load(`geo_title_${reportId}`);
-  const abstract: AbstractData | null = load(`geo_abstract_${reportId}`);
-  const rawTask = load(`geo_task_file_${reportId}`);
-  const taskFiles: TaskFile[] = Array.isArray(rawTask) ? rawTask : rawTask ? [rawTask] : [];
+export function buildContents(
+  blocks: Record<string, unknown>,
+  report: ReportData,
+  contractor?: Contractor,
+  contractors?: Contractor[],
+): ContentsEntry[] {
+  const load = (key: string) => (blocks[key] ?? null);
+
+  const label       = load("label") as LabelData | null;
+  const title       = load("title_page") as TitlePageData | null;
+  const abstract    = load("abstract") as AbstractData | null;
+  const rawTask = load("task_file");
+  const taskFiles: TaskFile[] = Array.isArray(rawTask) ? rawTask : rawTask ? [rawTask as TaskFile] : [];
 
   const hasLabel    = !!(label?.bookName || label?.copyNumber);
   const hasTitle    = !!(title?.customerName || title?.customerPosition);
@@ -54,23 +105,23 @@ export function buildContents(
     entries.push({ id: "abstract_kw", level: 1, title: "Ключевые слова", page: "—", status: abstract.keywords ? "filled" : "empty" });
   }
 
-  const illustrations: unknown[]   = load(`geo_illustrations_${reportId}`) || [];
-  const tables: unknown[]          = load(`geo_tables_${reportId}`) || [];
-  const textApps: unknown[]        = load(`geo_text_appendices_${reportId}`) || [];
-  const graphicApps: unknown[]     = load(`geo_graphic_appendices_${reportId}`) || [];
-  const terms: unknown[]           = load(`geo_terms_${reportId}`) || [];
-  const references: unknown[]      = load(`geo_references_${reportId}`) || [];
-  const intro: unknown[]           = load(`geo_intro_${reportId}`) || [];
-  const mainText: unknown[]        = load(`geo_main_text_${reportId}`) || [];
-  const conclusion: unknown[]      = load(`geo_conclusion_${reportId}`) || [];
-  const metrological               = load(`geo_metrological_${reportId}`);
-  const patent                     = load(`geo_patent_${reportId}`);
-  const review                     = load(`geo_review_${reportId}`);
-  const protocol                   = load(`geo_protocol_${reportId}`);
-  const cost                       = load(`geo_cost_${reportId}`);
-  const transferActs: unknown[]    = load(`geo_transfer_acts_${reportId}`) || [];
-  const textAppFiles: unknown[]    = load(`geo_text_app_files_${reportId}`) || [];
-  const graphicAppFiles: unknown[] = load(`geo_graphic_app_files_${reportId}`) || [];
+  const illustrations   = load("illustrations") || [];
+  const tables          = load("tables") || [];
+  const textApps        = load("text_appendices") || [];
+  const graphicApps     = load("graphic_appendices") || [];
+  const terms           = load("terms") || [];
+  const references      = load("references") || [];
+  const intro           = load("intro") || [];
+  const mainText        = load("main_text") || [];
+  const conclusion      = load("conclusion") || [];
+  const metrological    = load("metrological");
+  const patent          = load("patent");
+  const review          = load("review");
+  const protocol        = load("protocol");
+  const cost            = load("cost");
+  const transferActs    = load("transfer_acts") || [];
+  const textAppFiles    = load("text_app_files") || [];
+  const graphicAppFiles = load("graphic_app_files") || [];
 
   const arr = (v: unknown) => Array.isArray(v) ? v.length : 0;
 
@@ -96,6 +147,19 @@ export function buildContents(
   entries.push({ id: "text_app_files",     level: 0, title: "Текстовые приложения",                        page: "—", status: arr(textAppFiles) > 0 ? "file" : "empty" });
   entries.push({ id: "graphic_app_files",  level: 0, title: "Графические приложения",                      page: "—", status: arr(graphicAppFiles) > 0 ? "file" : "empty", note: arr(graphicAppFiles) === 0 ? "если предусмотрены" : undefined });
 
+  // Пункты, добавленные вручную: активны в отчёте и обязательны к заполнению
+  const custom = (load("contents_custom") || []) as CustomContentsEntry[];
+  for (const c of custom) {
+    entries.push({
+      id: `custom_${c.id}`,
+      level: c.level ?? 0,
+      title: c.title || "(без названия)",
+      page: "—",
+      status: (c.content || "").trim() ? "filled" : "empty",
+      note: (c.content || "").trim() ? undefined : "обязателен к заполнению",
+    });
+  }
+
   return entries;
 }
 
@@ -112,23 +176,46 @@ export function ContentsSection({
   contractors: Contractor[];
   onNavigate: (tab: TabId) => void;
 }) {
-  const [entries, setEntries] = useState<ContentsEntry[]>(() =>
-    buildContents(report.id, report, contractor, contractors)
+  const [entries, setEntries] = useState<ContentsEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Номера страниц и ручные пункты хранятся в общей БД
+  const { value: pages, setValue: setPages } = useReportBlock<Record<string, string>>(
+    "contents_pages", report.id, {}, `geo_contents_pages_${report.id}`,
   );
-  const [pages, setPages] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem(`geo_contents_pages_${report.id}`) || "{}"); } catch { return {}; }
-  });
+  const { value: custom, setValue: setCustom } = useReportBlock<CustomContentsEntry[]>(
+    "contents_custom", report.id, [],
+  );
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+
+  const rebuild = async () => {
+    setLoading(true);
+    try {
+      const blocks = await loadAllBlocks(report.id);
+      setEntries(buildContents(blocks, report, contractor, contractors));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setEntries(buildContents(report.id, report, contractor, contractors));
+    void rebuild();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report.id]);
+  }, [report.id, custom]);
 
-  const setPage = (id: string, v: string) => {
-    const next = { ...pages, [id]: v };
-    setPages(next);
-    localStorage.setItem(`geo_contents_pages_${report.id}`, JSON.stringify(next));
+  const setPage = (id: string, v: string) => setPages({ ...pages, [id]: v });
+
+  const addCustom = () => {
+    const t = newTitle.trim();
+    if (!t) return;
+    setCustom([...(custom || []), { id: Date.now().toString(36), title: t, level: 0 }]);
+    setNewTitle("");
+    setAddOpen(false);
   };
+
+  const removeCustom = (id: string) => setCustom((custom || []).filter((c) => c.id !== id));
 
   const filledCount = entries.filter((e) => e.status !== "empty" && e.level === 0).length;
   const totalTop    = entries.filter((e) => e.level === 0).length;
@@ -180,15 +267,40 @@ export function ContentsSection({
             <div className="h-full bg-geo-amber transition-all duration-500" style={{ width: `${(filledCount / totalTop) * 100}%` }} />
           </div>
         </div>
-        <button onClick={() => setEntries(buildContents(report.id, report, contractor, contractors))} className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-geo-amber border border-border hover:border-geo-amber/40 px-3 py-2 transition-colors flex-shrink-0">
-          <Icon name="RefreshCw" size={12} /> Обновить
+        <button onClick={() => void rebuild()} disabled={loading} className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-geo-amber border border-border hover:border-geo-amber/40 px-3 py-2 transition-colors flex-shrink-0 disabled:opacity-50">
+          <Icon name={loading ? "Loader2" : "RefreshCw"} size={12} className={loading ? "animate-spin" : ""} /> Обновить
+        </button>
+        <button onClick={() => setAddOpen(true)} className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-geo-amber border border-border hover:border-geo-amber/40 px-3 py-2 transition-colors flex-shrink-0">
+          <Icon name="Plus" size={12} /> Добавить пункт
         </button>
       </div>
 
       <div className="border border-geo-amber/30 bg-geo-amber/5 px-4 py-3 flex items-center gap-3">
         <Icon name="Info" size={14} className="text-geo-amber" />
-        <span className="font-mono text-xs text-geo-amber/80">Содержание строится автоматически · номера страниц вводите вручную · нажмите на раздел для перехода</span>
+        <span className="font-mono text-xs text-geo-amber/80">Содержание строится автоматически по заполненным разделам · свои пункты обязательны к заполнению</span>
       </div>
+
+      {addOpen && (
+        <div className="border border-geo-amber/40 bg-card px-4 py-3 flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1 flex-1 min-w-[240px]">
+            <span className="font-mono text-xs text-muted-foreground/70 uppercase tracking-widest">Название пункта</span>
+            <input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") addCustom(); }}
+              autoFocus
+              placeholder="Например: Методика опробования"
+              className="bg-background border border-border px-2.5 py-1.5 text-sm text-foreground focus:border-geo-amber outline-none"
+            />
+          </label>
+          <button onClick={addCustom} className="bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+            Добавить
+          </button>
+          <button onClick={() => { setAddOpen(false); setNewTitle(""); }} className="border border-border text-muted-foreground px-3 py-2 text-xs font-display tracking-wider uppercase hover:text-foreground transition-colors">
+            Отмена
+          </button>
+        </div>
+      )}
 
       <div className="border border-border overflow-hidden">
         <div className="bg-muted/50 border-b border-border px-4 py-2 grid grid-cols-[auto_1fr_80px] gap-4 items-center">
@@ -224,7 +336,20 @@ export function ContentsSection({
                           {entry.title}
                         </span>
                       )}
-                      {entry.note && <span className="font-mono text-xs text-muted-foreground/40">{entry.note}</span>}
+                      {entry.note && (
+                        <span className={`font-mono text-xs ${entry.note === "обязателен к заполнению" ? "text-geo-amber/80" : "text-muted-foreground/40"}`}>
+                          {entry.note}
+                        </span>
+                      )}
+                      {entry.id.startsWith("custom_") && (
+                        <button
+                          onClick={() => removeCustom(entry.id.replace("custom_", ""))}
+                          title="Удалить пункт"
+                          className="text-muted-foreground/40 hover:text-red-400 transition-colors"
+                        >
+                          <Icon name="Trash2" size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
