@@ -94,6 +94,32 @@ export async function saveReport(report: ReportData): Promise<ReportData> {
   return data.report as ReportData;
 }
 
+// ── Блоки отчёта ──────────────────────────────────────────────────────────────
+
+export type BlockName =
+  | "label" | "title_page" | "abstract" | "task_file" | "intro" | "main_text"
+  | "conclusion" | "terms" | "references" | "study" | "illustrations" | "tables"
+  | "text_appendices" | "graphic_appendices" | "text_app_files" | "graphic_app_files"
+  | "metrological" | "patent" | "review" | "protocol" | "cost" | "transfer_acts"
+  | "contents_pages";
+
+export async function fetchBlock<T>(block: BlockName, reportId: string): Promise<T | null> {
+  const url = `${API_URL}?resource=block&block=${block}&reportId=${encodeURIComponent(reportId)}`;
+  const res = await fetch(url, { method: "GET" });
+  if (!res.ok) throw new Error(`Не удалось загрузить блок ${block}: ${res.status}`);
+  const json = await res.json();
+  return (json.data ?? null) as T | null;
+}
+
+export async function saveBlock<T>(block: BlockName, reportId: string, data: T): Promise<void> {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resource: "block", block, reportId, data }),
+  });
+  if (!res.ok) throw new Error(`Не удалось сохранить блок ${block}: ${res.status}`);
+}
+
 export async function deleteReport(id: string): Promise<void> {
   const res = await fetch(API_URL, {
     method: "DELETE",

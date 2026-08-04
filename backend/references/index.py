@@ -144,8 +144,77 @@ def _handle_reports(method, cur, event, body):
     return _passport_response(405, {'error': 'method not allowed'})
 
 
+# Блоки отчёта: имя блока -> таблица
+BLOCKS = {
+    'label': 'report_label',
+    'title_page': 'report_title_page',
+    'abstract': 'report_abstract',
+    'task_file': 'report_task_file',
+    'intro': 'report_intro',
+    'main_text': 'report_main_text',
+    'conclusion': 'report_conclusion',
+    'terms': 'report_terms',
+    'references': 'report_references',
+    'study': 'report_study',
+    'illustrations': 'report_illustrations',
+    'tables': 'report_tables',
+    'text_appendices': 'report_text_appendices',
+    'graphic_appendices': 'report_graphic_appendices',
+    'text_app_files': 'report_text_app_files',
+    'graphic_app_files': 'report_graphic_app_files',
+    'metrological': 'report_metrological',
+    'patent': 'report_patent',
+    'review': 'report_review',
+    'protocol': 'report_protocol',
+    'cost': 'report_cost',
+    'transfer_acts': 'report_transfer_acts',
+    'contents_pages': 'report_contents_pages',
+}
+
+
+def _handle_block(method, cur, event, body):
+    # Универсальный CRUD блоков отчёта. block — имя блока, reportId — отчёт.
+    if method == 'GET':
+        qs = event.get('queryStringParameters') or {}
+        block = qs.get('block') or ''
+        report_id = str(qs.get('reportId') or '')
+    else:
+        block = body.get('block') or ''
+        report_id = str(body.get('reportId') or '')
+
+    if block not in BLOCKS:
+        return _passport_response(400, {'error': 'unknown block'})
+    if not report_id:
+        return _passport_response(400, {'error': 'reportId required'})
+    table = BLOCKS[block]
+
+    if method == 'GET':
+        cur.execute(f"SELECT data FROM {table} WHERE report_id = %s", (report_id,))
+        row = cur.fetchone()
+        return _passport_response(200, {'data': row['data'] if row else None})
+
+    if method == 'DELETE':
+        cur.execute(f"DELETE FROM {table} WHERE report_id = %s", (report_id,))
+        return _passport_response(200, {'ok': True})
+
+    if method == 'POST':
+        data = body.get('data')
+        if data is None:
+            return _passport_response(400, {'error': 'data required'})
+        cur.execute(
+            f"INSERT INTO {table} (report_id, data) VALUES (%s, %s) "
+            f"ON CONFLICT (report_id) DO UPDATE SET data = EXCLUDED.data, updated_at = now() "
+            f"RETURNING data",
+            (report_id, json.dumps(data, ensure_ascii=False)),
+        )
+        row = cur.fetchone()
+        return _passport_response(200, {'data': row['data']})
+
+    return _passport_response(405, {'error': 'method not allowed'})
+
+
 def handler(event, context):
-    '''Общая база: справочники, паспорта ГКМ и отчёты (комплекты).
+    '''Общая база: справочники, паспорта ГКМ, отчёты и блоки отчётов.
     GET — справочники, паспорт (resource=passport&reportId=..) или отчёты (resource=reports).
     POST — upsert записи. DELETE — удалить.'''
     method = event.get('httpMethod', 'GET')
@@ -168,6 +237,8 @@ def handler(event, context):
             return _handle_passport(method, cur, event, body)
         if resource == 'reports':
             return _handle_reports(method, cur, event, body)
+        if resource == 'block':
+            return _handle_block(method, cur, event, body)
 
         if method == 'GET':
             data = _fetch_all(cur)

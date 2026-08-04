@@ -4,6 +4,7 @@ import type { ReportData, Customer, Contractor, License, Contract } from "@/type
 import { TABS, DEFAULT_LABEL, DEFAULT_TITLE_PAGE, DEFAULT_ABSTRACT } from "@/components/report/reportTypes";
 import type { TabId, LabelData, TitlePageData, AbstractData } from "@/components/report/reportTypes";
 import { collectPdfData, exportToPdf } from "@/components/report/exportPdf";
+import { useReportBlock } from "@/lib/useReportBlock";
 import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } from "@/components/report/ReportSections1";
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
 import { IllustrationsSection } from "@/components/report/IllustrationsSection";
@@ -48,35 +49,16 @@ export default function ReportPage({ report, customers, contractors, licenses, c
     }
   };
 
-  const [labelData, setLabelData] = useState<LabelData>(() => {
-    try {
-      const stored = localStorage.getItem(`geo_label_${report.id}`);
-      return stored ? JSON.parse(stored) : DEFAULT_LABEL;
-    } catch { return DEFAULT_LABEL; }
-  });
-  useEffect(() => {
-    localStorage.setItem(`geo_label_${report.id}`, JSON.stringify(labelData));
-  }, [labelData, report.id]);
-
-  const [titleData, setTitleData] = useState<TitlePageData>(() => {
-    try {
-      const stored = localStorage.getItem(`geo_title_${report.id}`);
-      return stored ? JSON.parse(stored) : DEFAULT_TITLE_PAGE;
-    } catch { return DEFAULT_TITLE_PAGE; }
-  });
-  useEffect(() => {
-    localStorage.setItem(`geo_title_${report.id}`, JSON.stringify(titleData));
-  }, [titleData, report.id]);
-
-  const [abstractData, setAbstractData] = useState<AbstractData>(() => {
-    try {
-      const stored = localStorage.getItem(`geo_abstract_${report.id}`);
-      return stored ? JSON.parse(stored) : DEFAULT_ABSTRACT;
-    } catch { return DEFAULT_ABSTRACT; }
-  });
-  useEffect(() => {
-    localStorage.setItem(`geo_abstract_${report.id}`, JSON.stringify(abstractData));
-  }, [abstractData, report.id]);
+  // Блоки хранятся в общей БД (с автопереносом из браузера)
+  const { value: labelData, setValue: setLabelData } = useReportBlock<LabelData>(
+    "label", report.id, DEFAULT_LABEL, `geo_label_${report.id}`,
+  );
+  const { value: titleData, setValue: setTitleData } = useReportBlock<TitlePageData>(
+    "title_page", report.id, DEFAULT_TITLE_PAGE, `geo_title_${report.id}`,
+  );
+  const { value: abstractData, setValue: setAbstractData } = useReportBlock<AbstractData>(
+    "abstract", report.id, DEFAULT_ABSTRACT, `geo_abstract_${report.id}`,
+  );
 
   const customer   = customers.find((c) => c.id === report.customerId);
   const contractor = contractors.find((c) => c.id === report.contractorId);

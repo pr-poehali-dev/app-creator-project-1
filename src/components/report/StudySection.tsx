@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Icon from "@/components/ui/icon";
 import type { WorkMethod } from "./reportTypes";
+import { useReportBlock } from "@/lib/useReportBlock";
 
 // ─── Изученность: топооснова (Leaflet + OSM) с нанесением координат ─────────────
 // Точки привязываются к методам («виды и объёмы работ») из реферата отчёта.
@@ -35,20 +36,6 @@ const markerIcon = (color: string) =>
   });
 
 const DEFAULT_CENTER: [number, number] = [61.5, 65.5]; // ХМАО как нейтральный центр
-const load = (id: string): StudyPoint[] => {
-  try {
-    const s = localStorage.getItem(`geo_study_${id}`);
-    return s ? JSON.parse(s) : [];
-  } catch { return []; }
-};
-
-const loadMethods = (id: string): WorkMethod[] => {
-  try {
-    const s = localStorage.getItem(`geo_abstract_${id}`);
-    const data = s ? JSON.parse(s) : null;
-    return Array.isArray(data?.methods) ? data.methods : [];
-  } catch { return []; }
-};
 
 function ClickHandler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
   useMapEvents({ click: (e) => onClick(e.latlng.lat, e.latlng.lng) });
@@ -67,16 +54,20 @@ function Recenter({ points }: { points: StudyPoint[] }) {
 }
 
 export function StudySection({ reportId }: { reportId: string }) {
-  const [points, setPoints] = useState<StudyPoint[]>(() => load(reportId));
-  const [methods] = useState<WorkMethod[]>(() => loadMethods(reportId));
+  // Точки изученности хранятся в общей БД (с автопереносом из браузера)
+  const { value: points, setValue: setPoints, loading } = useReportBlock<StudyPoint[]>(
+    "study", reportId, [], `geo_study_${reportId}`,
+  );
+  // Методы берём из реферата (тоже из БД)
+  const { value: abstractData } = useReportBlock<{ methods?: WorkMethod[] }>(
+    "abstract", reportId, {}, `geo_abstract_${reportId}`,
+  );
+  const methods: WorkMethod[] = Array.isArray(abstractData?.methods) ? abstractData.methods : [];
+
   const [name, setName] = useState("");
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const [methodId, setMethodId] = useState<string>("");
-
-  useEffect(() => {
-    localStorage.setItem(`geo_study_${reportId}`, JSON.stringify(points));
-  }, [points, reportId]);
 
   const methodName = (id?: string) => methods.find((m) => m.id === id)?.name;
 
@@ -116,6 +107,12 @@ export function StudySection({ reportId }: { reportId: string }) {
           <p className="font-mono text-xs text-muted-foreground mt-0.5">Топооснова OSM · нанесение координат пунктов</p>
         </div>
       </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm font-mono mb-3">
+          <Icon name="Loader2" size={14} className="animate-spin" /> Загрузка точек из базы…
+        </div>
+      )}
 
       {/* Ввод координат */}
       <div className="border border-border bg-card/50 p-3 mb-3 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto] items-end">

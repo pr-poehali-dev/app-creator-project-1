@@ -81,6 +81,48 @@
       "expectedStatus": 200,
       "expectedBody": {"ok": true},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST save abstract block",
+      "method": "POST",
+      "path": "/",
+      "body": {"resource": "block", "block": "abstract", "reportId": "test-blk-1", "data": {"keywords": "вода, запасы"}},
+      "expectedStatus": 200,
+      "expectedBody": {"data": {"keywords": "вода, запасы"}},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET abstract block",
+      "method": "GET",
+      "path": "/?resource=block&block=abstract&reportId=test-blk-1",
+      "expectedStatus": 200,
+      "expectedBody": {"data": {"keywords": "вода, запасы"}},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST save study block (array)",
+      "method": "POST",
+      "path": "/",
+      "body": {"resource": "block", "block": "study", "reportId": "test-blk-1", "data": [{"id": "p1", "name": "Скв. 1"}]},
+      "expectedStatus": 200
+    },
+    {
+      "name": "DELETE abstract block",
+      "method": "DELETE",
+      "path": "/",
+      "body": {"resource": "block", "block": "abstract", "reportId": "test-blk-1"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "DELETE study block",
+      "method": "DELETE",
+      "path": "/",
+      "body": {"resource": "block", "block": "study", "reportId": "test-blk-1"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
     }
   ]
 }
