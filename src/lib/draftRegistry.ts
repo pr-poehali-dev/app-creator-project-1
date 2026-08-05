@@ -36,7 +36,10 @@ export function dirtyKeys(): string[] {
 /** Сохраняет все черновики. Возвращает true, если всё записано успешно. */
 export async function saveAllDrafts(): Promise<boolean> {
   const dirty = [...drafts.values()].filter((d) => d.dirty);
-  const results = await Promise.all(dirty.map((d) => d.save()));
+  // Сбой одного раздела не должен мешать сохранению остальных
+  const results = await Promise.all(
+    dirty.map((d) => d.save().catch(() => false)),
+  );
   return results.every(Boolean);
 }
 
@@ -50,12 +53,13 @@ export function subscribeDrafts(listener: () => void): () => void {
   return () => { listeners.delete(listener); };
 }
 
-/** Ключи черновиков (id раздела) → вкладка отчёта, где они правятся. */
+/** Ключи черновиков (id раздела) → вкладка отчёта, где они правятся.
+ *  «Изученность» (study) живёт на странице комплекта, а не во вкладках
+ *  отчёта, поэтому её здесь нет. */
 const DRAFT_TO_TAB: Record<string, string> = {
   label: "label",
   title_page: "title_page",
   abstract: "abstract",
-  study: "study",
   intro: "text_part",
   main_text: "text_part",
   conclusion: "text_part",

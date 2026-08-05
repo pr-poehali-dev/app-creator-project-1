@@ -1,3 +1,4 @@
+import { useCallback, useRef } from "react";
 import Icon from "@/components/ui/icon";
 import type { MainSection } from "./reportTypes";
 import { syncAllFromText } from "./syncFromText";
@@ -18,11 +19,15 @@ export function MainTextSection({ reportId }: { reportId: string }) {
   const update = (next: MainSection[]) => setSections(next);
 
   // Списки таблиц и иллюстраций пересобираем только после записи в базу
-  const saveWithSync = async () => {
-    const ok = await mainBlock.save();
-    if (ok) await syncAllFromText(reportId, sections);
+  const { save: saveMain } = mainBlock;
+  const sectionsRef = useRef(sections);
+  sectionsRef.current = sections;
+
+  const saveWithSync = useCallback(async () => {
+    const ok = await saveMain();
+    if (ok) await syncAllFromText(reportId, sectionsRef.current);
     return ok;
-  };
+  }, [saveMain, reportId]);
 
   const addSection = (level: 1 | 2) => {
     update([...sections, { id: newId(), level, title: "", blocks: [] }]);

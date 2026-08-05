@@ -28,10 +28,16 @@ export function useReportBlock<T>(
   const savedRef = useRef<T>(initial);
   const valueRef = useRef<T>(initial);
   valueRef.current = value;
+  // Правка, ожидающая записи по таймеру (для дозаписи при уходе с раздела)
+  const pendingSave = useRef<{ block: BlockName; reportId: string; data: T } | null>(null);
+  // Пользователь правил раздел до окончания загрузки
+  const touched = useRef(false);
 
   useEffect(() => {
     let alive = true;
     ready.current = false;
+    touched.current = false;
+    setDirty(false);
     setLoading(true);
 
     (async () => {
@@ -40,8 +46,14 @@ export function useReportBlock<T>(
         if (!alive) return;
 
         if (fromDb !== null && fromDb !== undefined) {
-          setValueState(fromDb);
           savedRef.current = fromDb;
+          // Если пользователь успел что-то изменить, пока данные грузились,
+          // не затираем его правку — помечаем её как несохранённую
+          if (touched.current) {
+            setDirty(JSON.stringify(valueRef.current) !== JSON.stringify(fromDb));
+          } else {
+            setValueState(fromDb);
+          }
         } else {
           // Переносим из браузера, если там что-то есть
           let legacy: T | null = null;
@@ -52,8 +64,12 @@ export function useReportBlock<T>(
             } catch { /* ignore */ }
           }
           const start = legacy ?? initial;
-          setValueState(start);
           savedRef.current = start;
+          if (touched.current) {
+            setDirty(JSON.stringify(valueRef.current) !== JSON.stringify(start));
+          } else {
+            setValueState(start);
+          }
           if (legacy !== null) {
             await saveBlock(block, reportId, legacy);
           }
@@ -76,7 +92,17 @@ export function useReportBlock<T>(
 
     return () => {
       alive = false;
-      if (timer.current) clearTimeout(timer.current);
+      // Если осталась незаписанная правка (debounce не успел сработать) —
+      // дописываем её, иначе последнее изменение потерялось бы молча
+      if (timer.current) {
+        clearTimeout(timer.current);
+        timer.current = null;
+        if (pendingSave.current) {
+          const { block: b, reportId: r, data } = pendingSave.current;
+          pendingSave.current = null;
+          void saveBlock(b, r, data).catch(() => { /* ignore */ });
+        }
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [block, reportId]);
@@ -95,6 +121,8 @@ export function useReportBlock<T>(
         ? (update as (p: T) => T)(prev)
         : update;
 
+      touched.current = true;
+
       if (ready.current) {
         if (manual) {
           // Правки копятся в черновике — записываем только по кнопке «Сохранить»
@@ -102,7 +130,9 @@ export function useReportBlock<T>(
         } else {
           if (timer.current) clearTimeout(timer.current);
           setSaving(true);
+          pendingSave.current = { block, reportId, data: next };
           timer.current = setTimeout(() => {
+            pendingSave.current = null;
             saveBlock(block, reportId, next)
               .then(() => { savedRef.current = next; })
               .catch(() => { /* ignore */ })
@@ -117,6 +147,9 @@ export function useReportBlock<T>(
   // Записать черновик в БД
   const save = useCallback(async () => {
     const next = valueRef.current;
+    // Снимаем отложенную автозапись — сейчас сохраним актуальное значение
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    pendingSave.current = null;
     setSaving(true);
     try {
       await saveBlock(block, reportId, next);

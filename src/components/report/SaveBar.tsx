@@ -35,7 +35,8 @@ export function SaveBar({
   }, [dirty, justSaved]);
 
   const handleSave = async () => {
-    const ok = await onSave();
+    let ok = false;
+    try { ok = await onSave(); } catch { ok = false; }
     setFailed(!ok);
     setJustSaved(ok);
   };

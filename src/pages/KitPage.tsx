@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
 import { StudySection } from "@/components/report/StudySection";
 import { PassportSection } from "@/components/report/PassportSection";
 import { KitReferences } from "./KitReferences";
 import type { RefKind } from "@/lib/referencesApi";
+import { hasUnsaved, saveAllDrafts, revertAllDrafts } from "@/lib/draftRegistry";
+import { UnsavedChangesModal } from "@/components/report/UnsavedChangesModal";
 
 // ─── Комплект геологической информации ────────────────────────────────────────
 // Комплект: общие сведения (справочники из общей БД) + 4 элемента.
@@ -71,6 +73,22 @@ interface KitPageProps {
 
 export default function KitPage({ report, customers, contractors, licenses, contracts, refsLoading, onSaveRef, onBack, onOpenReport, onUpdateReport }: KitPageProps) {
   const [openElement, setOpenElement] = useState<Exclude<KitElementId, "report"> | null>(null);
+  // Отложенный переход: ждём решения по несохранённым правкам (напр. «Изученность»)
+  const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
+
+  const guardNav = (go: () => void) => {
+    if (hasUnsaved()) setPendingNav(() => go);
+    else go();
+  };
+
+  // Предупреждение при закрытии вкладки браузера
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsaved()) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
 
   const customer = customers.find((c) => c.id === report.customerId);
   const contractor = contractors.find((c) => c.id === report.contractorId);
@@ -80,8 +98,10 @@ export default function KitPage({ report, customers, contractors, licenses, cont
   const openEl = KIT_ELEMENTS.find((e) => e.id === openElement);
 
   const handleOpen = (id: KitElementId) => {
-    if (id === "report") { onOpenReport(); return; }
-    setOpenElement(id);
+    guardNav(() => {
+      if (id === "report") { onOpenReport(); return; }
+      setOpenElement(id);
+    });
   };
 
   const meta: { label: string; value?: string }[] = [
@@ -99,7 +119,7 @@ export default function KitPage({ report, customers, contractors, licenses, cont
         <div className="flex items-center justify-between px-6 h-14">
           <div className="flex items-center gap-3">
             <button
-              onClick={openElement ? () => setOpenElement(null) : onBack}
+              onClick={() => guardNav(openElement ? () => setOpenElement(null) : onBack)}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-xs font-mono"
             >
               <Icon name="ChevronLeft" size={16} />
@@ -196,6 +216,17 @@ export default function KitPage({ report, customers, contractors, licenses, cont
           )}
         </div>
       </main>
+
+      {pendingNav && (
+        <UnsavedChangesModal
+          onSave={async () => {
+            const ok = await saveAllDrafts();
+            if (ok) { pendingNav(); setPendingNav(null); }
+          }}
+          onDiscard={() => { revertAllDrafts(); pendingNav(); setPendingNav(null); }}
+          onStay={() => setPendingNav(null)}
+        />
+      )}
     </div>
   );
 }
