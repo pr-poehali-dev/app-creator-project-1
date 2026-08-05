@@ -46,6 +46,24 @@ export default function ReportPage({ report, customers, contractors, licenses, c
   const activeTab = activeTabState;
   // Вкладки с несохранёнными правками — помечаем точкой
   const dirty = useDirtyTabs();
+  const [savingAll, setSavingAll] = useState(false);
+  const [savedAll, setSavedAll] = useState(false);
+  const [saveAllFailed, setSaveAllFailed] = useState(false);
+
+  // Записать в базу все разделы с изменениями разом
+  const handleSaveAll = async () => {
+    setSavingAll(true);
+    setSaveAllFailed(false);
+    const ok = await saveAllDrafts();
+    setSavingAll(false);
+    if (ok) {
+      setSavedAll(true);
+      setTimeout(() => setSavedAll(false), 2500);
+    } else {
+      setSaveAllFailed(true);
+      setTimeout(() => setSaveAllFailed(false), 4000);
+    }
+  };
 
   // Любой переход проверяет несохранённые правки текущего раздела
   const guardNav = (go: () => void) => {
@@ -136,12 +154,30 @@ export default function ReportPage({ report, customers, contractors, licenses, c
           </div>
           <div className="flex items-center gap-3">
             {dirty.size > 0 && (
-              <span
-                title="Разделы с несохранёнными изменениями"
-                className="flex items-center gap-1.5 font-mono text-xs text-geo-amber border border-geo-amber/40 px-2 py-0.5"
+              <button
+                onClick={handleSaveAll}
+                disabled={savingAll}
+                title="Записать в базу все разделы с изменениями"
+                className="flex items-center gap-1.5 font-mono text-xs text-geo-amber border border-geo-amber/40 px-2.5 py-1 hover:bg-geo-amber/10 transition-colors disabled:opacity-60"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-geo-amber animate-pulse" />
-                Не сохранено: {dirty.size}
+                {savingAll ? (
+                  <Icon name="Loader2" size={12} className="animate-spin" />
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-geo-amber animate-pulse" />
+                )}
+                {savingAll ? "Сохранение…" : `Сохранить всё (${dirty.size})`}
+              </button>
+            )}
+            {savedAll && dirty.size === 0 && (
+              <span className="flex items-center gap-1.5 font-mono text-xs text-green-400 border border-green-500/30 px-2.5 py-1">
+                <Icon name="CheckCircle2" size={12} />
+                Сохранено
+              </span>
+            )}
+            {saveAllFailed && (
+              <span className="flex items-center gap-1.5 font-mono text-xs text-destructive border border-destructive/40 px-2.5 py-1">
+                <Icon name="TriangleAlert" size={12} />
+                Не удалось сохранить
               </span>
             )}
             <span className={`font-mono text-xs font-bold border px-2 py-0.5 border-current ${secrecyColor[report.secrecy]}`}>
