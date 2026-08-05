@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import Icon from "@/components/ui/icon";
 import type { WorkMethod } from "./reportTypes";
 import { useReportBlock } from "@/lib/useReportBlock";
+import { SaveBar } from "./SaveBar";
 
 // ─── Изученность: топооснова (Leaflet + OSM) с нанесением координат ─────────────
 // Точки привязываются к методам («виды и объёмы работ») из реферата отчёта.
@@ -54,10 +55,11 @@ function Recenter({ points }: { points: StudyPoint[] }) {
 }
 
 export function StudySection({ reportId }: { reportId: string }) {
-  // Точки изученности хранятся в общей БД (с автопереносом из браузера)
-  const { value: points, setValue: setPoints, loading } = useReportBlock<StudyPoint[]>(
-    "study", reportId, [], `geo_study_${reportId}`,
+  // Точки изученности хранятся в общей БД. Запись — по кнопке «Сохранить».
+  const studyBlock = useReportBlock<StudyPoint[]>(
+    "study", reportId, [], `geo_study_${reportId}`, { manual: true },
   );
+  const { value: points, setValue: setPoints, loading } = studyBlock;
   // Методы берём из реферата (тоже из БД)
   const { value: abstractData } = useReportBlock<{ methods?: WorkMethod[] }>(
     "abstract", reportId, {}, `geo_abstract_${reportId}`,
@@ -229,6 +231,8 @@ export function StudySection({ reportId }: { reportId: string }) {
           </div>
         )}
       </div>
+
+      <SaveBar id="study" dirty={studyBlock.dirty} saving={studyBlock.saving} onSave={studyBlock.save} onRevert={studyBlock.revert} />
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { TABS, DEFAULT_LABEL, DEFAULT_TITLE_PAGE, DEFAULT_ABSTRACT } from "@/com
 import type { TabId, LabelData, TitlePageData, AbstractData } from "@/components/report/reportTypes";
 import { collectPdfData, exportToPdf } from "@/components/report/exportPdf";
 import { useReportBlock } from "@/lib/useReportBlock";
+import { hasUnsaved, saveAllDrafts, revertAllDrafts } from "@/lib/draftRegistry";
+import { SaveBar } from "@/components/report/SaveBar";
 import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } from "@/components/report/ReportSections1";
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
 import { IllustrationsSection } from "@/components/report/IllustrationsSection";
@@ -36,8 +38,28 @@ interface ReportPageProps {
 }
 
 export default function ReportPage({ report, customers, contractors, licenses, contracts, onBack, onUpdateReport }: ReportPageProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("label");
+  const [activeTabState, setActiveTabState] = useState<TabId>("label");
   const [pdfExporting, setPdfExporting] = useState(false);
+  // Отложенный переход: ждём решения пользователя по несохранённым правкам
+  const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
+  const activeTab = activeTabState;
+
+  // Любой переход проверяет несохранённые правки текущего раздела
+  const guardNav = (go: () => void) => {
+    if (hasUnsaved()) setPendingNav(() => go);
+    else go();
+  };
+  const setActiveTab = (tab: TabId) => guardNav(() => setActiveTabState(tab));
+  const handleBack = () => guardNav(onBack);
+
+  // Предупреждение при закрытии вкладки браузера
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsaved()) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
 
   const handleExportPdf = async () => {
     setPdfExporting(true);
@@ -49,16 +71,20 @@ export default function ReportPage({ report, customers, contractors, licenses, c
     }
   };
 
-  // Блоки хранятся в общей БД (с автопереносом из браузера)
-  const { value: labelData, setValue: setLabelData } = useReportBlock<LabelData>(
-    "label", report.id, DEFAULT_LABEL, `geo_label_${report.id}`,
+  // Блоки хранятся в общей БД. Правки копятся в черновике и уходят в базу
+  // только по кнопке «Сохранить» (manual).
+  const labelBlock = useReportBlock<LabelData>(
+    "label", report.id, DEFAULT_LABEL, `geo_label_${report.id}`, { manual: true },
   );
-  const { value: titleData, setValue: setTitleData } = useReportBlock<TitlePageData>(
-    "title_page", report.id, DEFAULT_TITLE_PAGE, `geo_title_${report.id}`,
+  const titleBlock = useReportBlock<TitlePageData>(
+    "title_page", report.id, DEFAULT_TITLE_PAGE, `geo_title_${report.id}`, { manual: true },
   );
-  const { value: abstractData, setValue: setAbstractData } = useReportBlock<AbstractData>(
-    "abstract", report.id, DEFAULT_ABSTRACT, `geo_abstract_${report.id}`,
+  const abstractBlock = useReportBlock<AbstractData>(
+    "abstract", report.id, DEFAULT_ABSTRACT, `geo_abstract_${report.id}`, { manual: true },
   );
+  const { value: labelData, setValue: setLabelData } = labelBlock;
+  const { value: titleData, setValue: setTitleData } = titleBlock;
+  const { value: abstractData, setValue: setAbstractData } = abstractBlock;
 
   const customer   = customers.find((c) => c.id === report.customerId);
   const contractor = contractors.find((c) => c.id === report.contractorId);
@@ -91,7 +117,7 @@ export default function ReportPage({ report, customers, contractors, licenses, c
         <div className="flex items-center justify-between px-6 h-14">
           <div className="flex items-center gap-3">
             <button
-              onClick={onBack}
+              onClick={handleBack}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-xs font-mono"
             >
               <Icon name="ChevronLeft" size={16} />
@@ -272,6 +298,17 @@ export default function ReportPage({ report, customers, contractors, licenses, c
               ) : (
                 <PlaceholderTable tab={activeTabDef} />
               )}
+
+              {/* Сохранение раздела: правки уходят в базу только по кнопке */}
+              {activeTab === "label" && (
+                <SaveBar id="label" dirty={labelBlock.dirty} saving={labelBlock.saving} onSave={labelBlock.save} onRevert={labelBlock.revert} />
+              )}
+              {activeTab === "title_page" && (
+                <SaveBar id="title_page" dirty={titleBlock.dirty} saving={titleBlock.saving} onSave={titleBlock.save} onRevert={titleBlock.revert} />
+              )}
+              {activeTab === "abstract" && (
+                <SaveBar id="abstract" dirty={abstractBlock.dirty} saving={abstractBlock.saving} onSave={abstractBlock.save} onRevert={abstractBlock.revert} />
+              )}
             </div>
           </main>
 
@@ -295,6 +332,64 @@ export default function ReportPage({ report, customers, contractors, licenses, c
               <Icon name="ChevronRight" size={14} />
             </button>
           </div>
+        </div>
+      </div>
+
+      {pendingNav && (
+        <UnsavedChangesModal
+          onSave={async () => {
+            const ok = await saveAllDrafts();
+            if (ok) { pendingNav(); setPendingNav(null); }
+          }}
+          onDiscard={() => { revertAllDrafts(); pendingNav(); setPendingNav(null); }}
+          onStay={() => setPendingNav(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Вопрос при уходе из раздела с несохранёнными правками
+function UnsavedChangesModal({ onSave, onDiscard, onStay }: {
+  onSave: () => Promise<void>;
+  onDiscard: () => void;
+  onStay: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="bg-card border border-geo-amber/40 w-full max-w-md p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <Icon name="TriangleAlert" size={18} className="text-geo-amber flex-shrink-0" />
+          <h4 className="font-display text-sm tracking-wider uppercase text-foreground">Несохранённые изменения</h4>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          В этом разделе есть правки, которые ещё не записаны в базу. Сохранить их перед переходом?
+        </p>
+        <div className="flex flex-wrap gap-2 justify-end pt-1">
+          <button
+            onClick={onStay}
+            disabled={saving}
+            className="border border-border text-muted-foreground px-3 py-2 text-xs font-display tracking-wider uppercase hover:text-foreground transition-colors disabled:opacity-50"
+          >
+            Остаться
+          </button>
+          <button
+            onClick={onDiscard}
+            disabled={saving}
+            className="border border-destructive/50 text-destructive px-3 py-2 text-xs font-display tracking-wider uppercase hover:bg-destructive/10 transition-colors disabled:opacity-50"
+          >
+            Не сохранять
+          </button>
+          <button
+            onClick={async () => { setSaving(true); await onSave(); setSaving(false); }}
+            disabled={saving}
+            className="bg-geo-amber text-primary-foreground px-5 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors disabled:opacity-60 flex items-center gap-2"
+          >
+            {saving && <Icon name="Loader2" size={12} className="animate-spin" />}
+            {saving ? "Сохранение…" : "Сохранить"}
+          </button>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import type { IntroBlock, IntroImage } from "./reportTypes";
 import { UPLOAD_URL } from "./reportTypes";
 import { TableBlockEditor, TablePreview, makeTable } from "./TableBlockEditor";
 import { useReportBlock } from "@/lib/useReportBlock";
+import { SaveBar } from "./SaveBar";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -297,10 +298,11 @@ function AddBlockMenu({ onAdd }: { onAdd: (type: "text" | "section" | "image" | 
 // ─── IntroSection ─────────────────────────────────────────────────────────────
 
 export function IntroSection({ reportId }: { reportId: string }) {
-  // Введение хранится в общей БД (с автопереносом из браузера)
-  const { value: blocks, setValue: setBlocks } = useReportBlock<IntroBlock[]>(
-    "intro", reportId, [], `geo_intro_${reportId}`,
+  // Введение хранится в общей БД. Правки уходят в базу по кнопке «Сохранить».
+  const introBlock = useReportBlock<IntroBlock[]>(
+    "intro", reportId, [], `geo_intro_${reportId}`, { manual: true },
   );
+  const { value: blocks, setValue: setBlocks } = introBlock;
 
   const update = (next: IntroBlock[]) => setBlocks(next);
 
@@ -384,6 +386,8 @@ export function IntroSection({ reportId }: { reportId: string }) {
           <AddBlockMenu onAdd={addBlock} />
         </div>
       )}
+
+      <SaveBar id="intro" dirty={introBlock.dirty} saving={introBlock.saving} onSave={introBlock.save} onRevert={introBlock.revert} />
     </div>
   );
 }

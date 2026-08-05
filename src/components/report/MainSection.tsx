@@ -4,18 +4,24 @@ import { syncAllFromText } from "./syncFromText";
 import { newId, buildBlockNumbers } from "./MainSectionHelpers";
 import { SectionCard } from "./MainSectionCard";
 import { useReportBlock } from "@/lib/useReportBlock";
+import { SaveBar } from "./SaveBar";
 
 // ─── MainTextSection ──────────────────────────────────────────────────────────
 
 export function MainTextSection({ reportId }: { reportId: string }) {
-  // Основная часть хранится в общей БД (с автопереносом из браузера)
-  const { value: sections, setValue: setSections } = useReportBlock<MainSection[]>(
-    "main_text", reportId, [], `geo_main_text_${reportId}`,
+  // Основная часть хранится в общей БД. Правки уходят в базу по кнопке «Сохранить».
+  const mainBlock = useReportBlock<MainSection[]>(
+    "main_text", reportId, [], `geo_main_text_${reportId}`, { manual: true },
   );
+  const { value: sections, setValue: setSections } = mainBlock;
 
-  const update = (next: MainSection[]) => {
-    setSections(next);
-    void syncAllFromText(reportId, next);
+  const update = (next: MainSection[]) => setSections(next);
+
+  // Списки таблиц и иллюстраций пересобираем только после записи в базу
+  const saveWithSync = async () => {
+    const ok = await mainBlock.save();
+    if (ok) await syncAllFromText(reportId, sections);
+    return ok;
   };
 
   const addSection = (level: 1 | 2) => {
@@ -106,6 +112,8 @@ export function MainTextSection({ reportId }: { reportId: string }) {
           </div>
         </div>
       )}
+
+      <SaveBar id="main_text" dirty={mainBlock.dirty} saving={mainBlock.saving} onSave={saveWithSync} onRevert={mainBlock.revert} />
     </div>
   );
 }

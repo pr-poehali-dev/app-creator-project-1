@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { MainSection } from "./reportTypes";
 import { useReportBlock } from "@/lib/useReportBlock";
+import { SaveBar } from "./SaveBar";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -146,10 +147,11 @@ function AddBlockMenu({ onAdd }: { onAdd: (type: ConclusionBlock["type"]) => voi
 // ─── ConclusionSection ────────────────────────────────────────────────────────
 
 export function ConclusionSection({ reportId }: { reportId: string }) {
-  // Заключение хранится в общей БД (с автопереносом из браузера)
-  const { value: blocks, setValue: setBlocks } = useReportBlock<ConclusionBlock[]>(
-    "conclusion", reportId, [], `geo_conclusion_${reportId}`,
+  // Заключение хранится в общей БД. Правки уходят в базу по кнопке «Сохранить».
+  const conclusionBlock = useReportBlock<ConclusionBlock[]>(
+    "conclusion", reportId, [], `geo_conclusion_${reportId}`, { manual: true },
   );
+  const { value: blocks, setValue: setBlocks } = conclusionBlock;
   // Номер заключения зависит от количества разделов основной части (тоже из БД)
   const { value: mainSections } = useReportBlock<MainSection[]>(
     "main_text", reportId, [], `geo_main_text_${reportId}`,
@@ -246,6 +248,8 @@ export function ConclusionSection({ reportId }: { reportId: string }) {
           <AddBlockMenu onAdd={addBlock} />
         </div>
       )}
+
+      <SaveBar id="conclusion" dirty={conclusionBlock.dirty} saving={conclusionBlock.saving} onSave={conclusionBlock.save} onRevert={conclusionBlock.revert} />
     </div>
   );
 }
