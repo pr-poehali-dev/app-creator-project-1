@@ -5,6 +5,7 @@ import { IntroSection } from "./IntroSection";
 import { MainTextSection } from "./MainSection";
 import { ConclusionSection } from "./ConclusionSection";
 import { SectionMeta } from "./SectionMeta";
+import { useDirtyKeys } from "@/lib/useDirtyTabs";
 
 type SubTab = "intro" | "main" | "conclusion";
 
@@ -40,8 +41,13 @@ interface TextPartSectionProps {
   contractors?: Contractor[];
 }
 
+// Подвкладка → ключ черновика
+const SUB_DRAFT: Record<SubTab, string> = { intro: "intro", main: "main_text", conclusion: "conclusion" };
+
 export function TextPartSection({ reportId, secrecy, responsible, contractor, contractors = [] }: TextPartSectionProps) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("intro");
+  // Подразделы с несохранёнными правками
+  const dirtyDrafts = useDirtyKeys();
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -73,6 +79,12 @@ export function TextPartSection({ reportId, secrecy, responsible, contractor, co
                 <span className={`font-display text-xs tracking-wider uppercase ${isActive ? "text-geo-amber" : "text-muted-foreground"}`}>
                   {tab.label}
                 </span>
+                {dirtyDrafts.has(SUB_DRAFT[tab.id]) && (
+                  <span
+                    title="Есть несохранённые изменения"
+                    className="w-1.5 h-1.5 rounded-full bg-geo-amber flex-shrink-0 animate-pulse"
+                  />
+                )}
               </div>
               <span className="font-mono text-xs text-muted-foreground/50 leading-tight hidden sm:block">{idx + 1} из 3</span>
             </button>
@@ -96,15 +108,18 @@ export function TextPartSection({ reportId, secrecy, responsible, contractor, co
         contractors={contractors}
       />
 
-      {/* Sub-tab content */}
+      {/* Подразделы держим смонтированными: переключение между ними
+          не должно терять несохранённый черновик */}
       <div>
-        {activeSubTab === "intro" ? (
+        <div className={activeSubTab === "intro" ? "" : "hidden"}>
           <IntroSection reportId={reportId} />
-        ) : activeSubTab === "main" ? (
+        </div>
+        <div className={activeSubTab === "main" ? "" : "hidden"}>
           <MainTextSection reportId={reportId} />
-        ) : (
+        </div>
+        <div className={activeSubTab === "conclusion" ? "" : "hidden"}>
           <ConclusionSection reportId={reportId} />
-        )}
+        </div>
       </div>
     </div>
   );

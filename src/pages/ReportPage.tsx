@@ -6,6 +6,7 @@ import type { TabId, LabelData, TitlePageData, AbstractData } from "@/components
 import { collectPdfData, exportToPdf } from "@/components/report/exportPdf";
 import { useReportBlock } from "@/lib/useReportBlock";
 import { hasUnsaved, saveAllDrafts, revertAllDrafts } from "@/lib/draftRegistry";
+import { useDirtyTabs } from "@/lib/useDirtyTabs";
 import { SaveBar } from "@/components/report/SaveBar";
 import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } from "@/components/report/ReportSections1";
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
@@ -43,6 +44,8 @@ export default function ReportPage({ report, customers, contractors, licenses, c
   // Отложенный переход: ждём решения пользователя по несохранённым правкам
   const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
   const activeTab = activeTabState;
+  // Вкладки с несохранёнными правками — помечаем точкой
+  const dirty = useDirtyTabs();
 
   // Любой переход проверяет несохранённые правки текущего раздела
   const guardNav = (go: () => void) => {
@@ -132,6 +135,15 @@ export default function ReportPage({ report, customers, contractors, licenses, c
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {dirty.size > 0 && (
+              <span
+                title="Разделы с несохранёнными изменениями"
+                className="flex items-center gap-1.5 font-mono text-xs text-geo-amber border border-geo-amber/40 px-2 py-0.5"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-geo-amber animate-pulse" />
+                Не сохранено: {dirty.size}
+              </span>
+            )}
             <span className={`font-mono text-xs font-bold border px-2 py-0.5 border-current ${secrecyColor[report.secrecy]}`}>
               {report.secrecy}
             </span>
@@ -173,7 +185,13 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 </span>
                 <Icon name={tab.icon} fallback="File" size={12} />
                 <span className="text-xs leading-tight truncate">{tab.shortLabel}</span>
-                {tab.note && <span className="ml-auto text-muted-foreground/30 text-xs">*</span>}
+                {dirty.has(tab.id) && (
+                  <span
+                    title="Есть несохранённые изменения"
+                    className="ml-auto w-1.5 h-1.5 rounded-full bg-geo-amber flex-shrink-0 animate-pulse"
+                  />
+                )}
+                {tab.note && !dirty.has(tab.id) && <span className="ml-auto text-muted-foreground/30 text-xs">*</span>}
               </button>
             ))}
           </nav>
@@ -210,6 +228,9 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 }`}
               >
                 {tab.shortLabel}
+                {dirty.has(tab.id) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-geo-amber flex-shrink-0 animate-pulse" />
+                )}
               </button>
             ))}
           </div>
