@@ -66,6 +66,19 @@ export function ReportsSection({
     (l) => !form.customerId || l.ownerId === form.customerId
   );
 
+  // Что именно удаляем — показываем в подтверждении, чтобы не стереть чужой комплект
+  const deleteTarget = deleteId ? reports.find((r) => r.id === deleteId) : undefined;
+  const deleteMeta = deleteTarget
+    ? [
+        customers.find((c) => c.id === deleteTarget.customerId)?.name,
+        deleteTarget.place && deleteTarget.year
+          ? `${deleteTarget.place}, ${deleteTarget.year}`
+          : deleteTarget.place || deleteTarget.year,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
+
   const handleContractorChange = (id: string) => {
     const c = contractors.find((c) => c.id === id);
     setForm((f) => ({ ...f, contractorId: id, responsible: c?.responsible || "" }));
@@ -201,7 +214,19 @@ export function ReportsSection({
 
       {deleteId && (
         <Modal title="Подтверждение удаления" onClose={() => setDeleteId(null)}>
-          <p className="text-sm text-muted-foreground">Вы уверены, что хотите удалить запись?</p>
+          <p className="text-sm text-muted-foreground">Будет безвозвратно удалён комплект:</p>
+          <div className="border-l-2 border-destructive bg-destructive/5 px-3 py-2">
+            <p className="text-sm text-foreground font-medium leading-snug">
+              {deleteTarget?.title || "Без названия"}
+            </p>
+            {deleteMeta && (
+              <p className="font-mono text-xs text-muted-foreground mt-1">{deleteMeta}</p>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Вместе с ним удалятся все разделы отчёта, приложения и паспорт ГКМ. Отменить это действие
+            будет нельзя.
+          </p>
           <div className="flex gap-3 pt-2">
             <button onClick={() => remove(deleteId)} className="flex-1 bg-destructive text-destructive-foreground py-2 text-sm font-display tracking-wider uppercase hover:opacity-90 transition-opacity">
               Удалить
