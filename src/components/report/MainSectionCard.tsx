@@ -2,7 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import type { MainSection, MainBlock, AppendixRef } from "./reportTypes";
 import { makeTable } from "./TableBlockEditor";
-import { newId, BlockNumberMap, AddBlockMenu, AppendixRefPicker, BlockActions } from "./MainSectionHelpers";
+import { newId, BlockNumberMap, AddBlockMenu, AppendixRefPicker } from "./MainSectionHelpers";
 import { TextBlockEl, ImageBlockEl, TableBlockEl, AppendixRefEl } from "./MainSectionBlocks";
 
 // ─── SectionCard ──────────────────────────────────────────────────────────────

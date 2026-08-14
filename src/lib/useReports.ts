@@ -19,7 +19,7 @@ export function useReports(seed: ReportData[]) {
     let alive = true;
     (async () => {
       try {
-        let dbReports = await fetchReports();
+        const dbReports = await fetchReports();
 
         if (!localStorage.getItem(MIGRATED_FLAG)) {
           // Собираем локальные отчёты: seed + то, что уже введено в браузере

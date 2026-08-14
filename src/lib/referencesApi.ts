@@ -142,6 +142,12 @@ export async function deleteAllBlocks(reportId: string): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ resource: "passport", reportId }),
     }).catch(() => undefined),
+    // Подписи разделов (авторы, ответственные) — без tabId удаляются все
+    fetch(API_URL, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resource: "section_meta", reportId }),
+    }).catch(() => undefined),
   ]);
 }
 

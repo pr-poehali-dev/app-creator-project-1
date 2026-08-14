@@ -183,6 +183,11 @@ def _handle_section_meta(method, cur, event, body):
         report_id = str(body.get('reportId') or '')
         tab_id = str(body.get('tabId') or '')
 
+    # Удаление всего отчёта: чистим подписи всех его разделов разом
+    if method == 'DELETE' and report_id and not tab_id:
+        cur.execute("DELETE FROM report_section_meta WHERE report_id = %s", (report_id,))
+        return _passport_response(200, {'ok': True})
+
     if not report_id or not tab_id:
         return _passport_response(400, {'error': 'reportId and tabId required'})
 

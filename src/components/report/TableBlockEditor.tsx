@@ -254,7 +254,7 @@ export function TableBlockEditor({ caption, data, onCaptionChange, onDataChange 
                     rowIdx={ri}
                     colIdx={ci}
                     selected={selected?.[0] === ri && selected?.[1] === ci}
-                    onSelect={setSelected}
+                    onSelect={(r, c) => setSelected([r, c])}
                     onChange={changeCell}
                   />
                 ))}

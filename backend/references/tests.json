@@ -145,6 +145,15 @@
       "expectedStatus": 200,
       "expectedBody": {"ok": true},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "DELETE all section meta of report",
+      "method": "DELETE",
+      "path": "/",
+      "body": {"resource": "section_meta", "reportId": "test-blk-1"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
     }
   ]
 }
