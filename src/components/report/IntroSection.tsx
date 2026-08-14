@@ -5,6 +5,7 @@ import { UPLOAD_URL } from "./reportTypes";
 import { TableBlockEditor, TablePreview, makeTable } from "./TableBlockEditor";
 import { useReportBlock } from "@/lib/useReportBlock";
 import { SaveBar } from "./SaveBar";
+import { RecoveryBanner } from "./RecoveryBanner";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -387,6 +388,13 @@ export function IntroSection({ reportId }: { reportId: string }) {
         </div>
       )}
 
+      {introBlock.recovery && (
+        <RecoveryBanner
+          savedAt={introBlock.recovery.savedAt}
+          onRestore={introBlock.restoreBackup}
+          onDismiss={introBlock.dismissBackup}
+        />
+      )}
       <SaveBar id="intro" dirty={introBlock.dirty} saving={introBlock.saving} onSave={introBlock.save} onRevert={introBlock.revert} />
     </div>
   );

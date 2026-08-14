@@ -321,7 +321,7 @@ export function ReportFormFields({
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button onClick={onSave} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+        <button onClick={onSave} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
           Сохранить
         </button>
         <button onClick={onClose} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">

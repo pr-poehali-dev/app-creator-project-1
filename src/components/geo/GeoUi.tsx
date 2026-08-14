@@ -90,7 +90,7 @@ export function SectionHeader({
       </div>
       <button
         onClick={onAdd}
-        className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors"
+        className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors"
       >
         <Icon name="Plus" size={14} />
         Добавить

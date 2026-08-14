@@ -41,7 +41,7 @@ export function ExecutorsList({ contractor, setContractors }: {
     <div className="mt-3 border-t border-border/50 pt-3">
       <div className="flex items-center justify-between mb-2">
         <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Исполнители · {executors.length}</span>
-        <button onClick={openAddExec} className="flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors">
+        <button onClick={openAddExec} className="flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-geo-amber-hover transition-colors">
           <Icon name="Plus" size={12} /> Добавить исполнителя
         </button>
       </div>
@@ -79,7 +79,7 @@ export function ExecutorsList({ contractor, setContractors }: {
           <GeoInput label="Должность" value={execForm.position} onChange={(v) => setExecForm((f) => ({ ...f, position: v }))} placeholder="ответ. исп., вед. геолог" />
           <GeoInput label="Учёная степень / звание" value={execForm.degree} onChange={(v) => setExecForm((f) => ({ ...f, degree: v }))} placeholder="канд. геол.-мин. наук" />
           <div className="flex gap-3 pt-2">
-            <button onClick={saveExec} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">Сохранить</button>
+            <button onClick={saveExec} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">Сохранить</button>
             <button onClick={() => setExecModal(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
           </div>
         </Modal>
@@ -171,7 +171,7 @@ export function CustomersSection({
           <GeoInput label="ИНН" value={form.inn} onChange={(v) => setForm((f) => ({ ...f, inn: v }))} placeholder="7712345678" />
           <GeoInput label="Юридический адрес" value={form.address} onChange={(v) => setForm((f) => ({ ...f, address: v }))} placeholder="г. Москва, ул. ..." />
           <div className="flex gap-3 pt-2">
-            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">Сохранить</button>
+            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">Сохранить</button>
             <button onClick={() => setModal(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
           </div>
         </Modal>
@@ -264,7 +264,7 @@ export function ContractorsSection({
           <GeoInput label="Главный геолог" value={form.chiefGeologist} onChange={(v) => setForm((f) => ({ ...f, chiefGeologist: v }))} placeholder="Фамилия Имя Отчество" />
           <GeoInput label="Ответственный исполнитель" value={form.responsible} onChange={(v) => setForm((f) => ({ ...f, responsible: v }))} placeholder="Фамилия Имя Отчество" />
           <div className="flex gap-3 pt-2">
-            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">Сохранить</button>
+            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">Сохранить</button>
             <button onClick={() => setModal(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
           </div>
         </Modal>

@@ -69,11 +69,12 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				geo: {
-					amber: 'hsl(42 90% 55%)',
-					'amber-dim': 'hsl(42 60% 35%)',
-					green: 'hsl(150 60% 40%)',
-					blue: 'hsl(210 80% 55%)',
-					red: 'hsl(0 70% 50%)',
+					amber: 'hsl(var(--geo-amber))',
+					'amber-dim': 'hsl(var(--geo-amber-dim))',
+					'amber-hover': 'hsl(var(--geo-amber-hover))',
+					green: 'hsl(var(--geo-green))',
+					blue: 'hsl(var(--geo-blue))',
+					red: 'hsl(var(--geo-red))',
 				}
 			},
 			borderRadius: {

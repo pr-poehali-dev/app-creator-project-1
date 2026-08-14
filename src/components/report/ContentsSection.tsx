@@ -293,7 +293,7 @@ export function ContentsSection({
               className="bg-background border border-border px-2.5 py-1.5 text-sm text-foreground focus:border-geo-amber outline-none"
             />
           </label>
-          <button onClick={addCustom} className="bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+          <button onClick={addCustom} className="bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
             Добавить
           </button>
           <button onClick={() => { setAddOpen(false); setNewTitle(""); }} className="border border-border text-muted-foreground px-3 py-2 text-xs font-display tracking-wider uppercase hover:text-foreground transition-colors">

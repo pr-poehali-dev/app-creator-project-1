@@ -133,7 +133,7 @@ export function GraphicAppendicesSection({ reportId, secrecy, responsible, contr
         <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
           Приложений: <span className="text-geo-amber">{String(items.length).padStart(2, "0")}</span>
         </span>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+        <button onClick={openAdd} className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
           <Icon name="Plus" size={14} /> Добавить приложение
         </button>
       </div>
@@ -293,7 +293,7 @@ export function GraphicAppendicesSection({ reportId, secrecy, responsible, contr
             )}
 
             <div className="flex gap-3 pt-1">
-              <button onClick={saveItem} disabled={uploading} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 disabled:opacity-40 transition-colors">
+              <button onClick={saveItem} disabled={uploading} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover disabled:opacity-40 transition-colors">
                 Сохранить
               </button>
               <button onClick={() => setModal(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>

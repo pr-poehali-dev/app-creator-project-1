@@ -5,6 +5,7 @@ import { ReportCard } from "./ReportCard";
 import { ReportViewModal } from "./ReportViewModal";
 import { ReportFormFields } from "./ReportFormFields";
 import { deleteAllBlocks } from "@/lib/referencesApi";
+import { clearReportBackups } from "@/lib/draftBackup";
 
 const emptyForm: Omit<ReportData, "id"> = {
   title: "",
@@ -132,6 +133,8 @@ export function ReportsSection({
     Object.keys(localStorage)
       .filter((k) => k.startsWith("geo_") && k.endsWith(`_${id}`))
       .forEach((k) => localStorage.removeItem(k));
+    // Страховочные копии черновиков этого отчёта
+    clearReportBackups(id);
     setReports((prev) => prev.filter((r) => r.id !== id));
     setDeleteId(null);
   };

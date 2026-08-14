@@ -137,7 +137,7 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
           Приложений: <span className="text-geo-amber">{String(apps.length).padStart(2, "0")}</span>
         </span>
         <button onClick={() => { setAddForm({ title: "", scale: "" }); setAddError(null); setAddModal(true); }}
-          className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+          className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
           <Icon name="Plus" size={14} /> Добавить приложение
         </button>
       </div>
@@ -232,7 +232,7 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
                         </div>
                         <div className="flex gap-3 flex-shrink-0">
                           <button onClick={() => openPreview(app.fileUrl!, app.filename)}
-                            className="flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors">
+                            className="flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-geo-amber-hover transition-colors">
                             <Icon name="Eye" size={11} /> Просмотр
                           </button>
                           <label className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-geo-amber cursor-pointer transition-colors">
@@ -361,7 +361,7 @@ export function GraphicAppFilesSection({ reportId, secrecy, responsible, contrac
             )}
             <div className="flex gap-3 pt-1">
               <button onClick={addNew}
-                className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+                className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
                 Добавить
               </button>
               <button onClick={() => setAddModal(false)}

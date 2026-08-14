@@ -1,4 +1,5 @@
 import Icon from "@/components/ui/icon";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function AppHeader() {
   return (
@@ -21,6 +22,7 @@ export function AppHeader() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-geo-green"></span>
             <span className="font-mono text-xs text-muted-foreground">АКТИВНО</span>
           </div>
+          <ThemeToggle />
         </div>
       </div>
     </header>

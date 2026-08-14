@@ -106,7 +106,7 @@ export function ReviewSection({ reportId, secrecy, responsible, contractor, cont
             onDragOver={(e) => { e.preventDefault(); setDragOver("new"); }}
             onDragLeave={() => setDragOver(null)}
             onDrop={(e) => { e.preventDefault(); setDragOver(null); const f = e.dataTransfer.files[0]; if (f) upload(f, "new", ""); }}
-            className={`flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors cursor-pointer ${dragOver === "new" ? "opacity-70" : ""}`}
+            className={`flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors cursor-pointer ${dragOver === "new" ? "opacity-70" : ""}`}
           >
             <input type="file" accept=".pdf,application/pdf" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f, "new", ""); }} />
@@ -169,7 +169,7 @@ export function ReviewSection({ reportId, secrecy, responsible, contractor, cont
                       {new Date(r.uploadedAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })}
                     </p>
                     <button onClick={() => openPreview(r.url, r.filename)}
-                      className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-1">
+                      className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-geo-amber-hover transition-colors mt-1">
                       <Icon name="Eye" size={11} /> Просмотр
                     </button>
                   </div>

@@ -66,7 +66,7 @@ export function ReportCard({
         <div className="flex flex-col gap-2 ml-4">
           <button
             onClick={() => onOpen(r.id)}
-            className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors"
+            className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors"
           >
             <Icon name="FolderOpen" size={12} />
             Открыть

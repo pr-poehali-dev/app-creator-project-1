@@ -93,7 +93,7 @@ export function ReportViewModal({
           <Icon name="Pencil" size={12} />
           Редактировать
         </button>
-        <button onClick={onClose} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+        <button onClick={onClose} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
           Закрыть
         </button>
       </div>

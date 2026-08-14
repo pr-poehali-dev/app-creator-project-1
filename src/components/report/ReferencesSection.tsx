@@ -145,7 +145,7 @@ function ReferenceForm({ initial, onSave, onCancel }: {
       )}
 
       <div className="flex gap-3 pt-1">
-        <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+        <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
           Сохранить
         </button>
         <button onClick={onCancel} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">
@@ -294,7 +294,7 @@ export function ReferencesSection({ reportId, secrecy, responsible, contractor, 
             Всего: <span className="text-geo-amber">{items.length}</span>
           </span>
           <button onClick={() => openAdd("published")}
-            className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+            className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
             <Icon name="Plus" size={13} /> Опубликованная
           </button>
           <button onClick={() => openAdd("unpublished")}

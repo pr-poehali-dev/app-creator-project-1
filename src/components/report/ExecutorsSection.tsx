@@ -159,7 +159,7 @@ export function ExecutorsSection({
               </select>
             </div>
             <div className="flex gap-3">
-              <button onClick={addCoContractor} disabled={!selectedCoId} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 disabled:opacity-40 transition-colors">Добавить</button>
+              <button onClick={addCoContractor} disabled={!selectedCoId} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover disabled:opacity-40 transition-colors">Добавить</button>
               <button onClick={() => setCoModal(false)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
             </div>
           </div>

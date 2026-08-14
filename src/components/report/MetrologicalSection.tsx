@@ -210,7 +210,7 @@ export function MetrologicalSection({ reportId, secrecy, responsible, contractor
               )}
             </p>
             <button onClick={addConclusion}
-              className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+              className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
               <Icon name="Plus" size={12} /> Добавить заключение
             </button>
           </div>

@@ -168,7 +168,7 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
         </span>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors"
+          className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors"
         >
           <Icon name="Plus" size={14} /> Добавить иллюстрацию
         </button>
@@ -218,7 +218,7 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
                     <div className="flex items-center gap-3 mt-1">
                       <button
                         onClick={() => openPreview(item.url, item.filename)}
-                        className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors"
+                        className="inline-flex items-center gap-1 text-xs font-mono text-geo-amber hover:text-geo-amber-hover transition-colors"
                       >
                         <Icon name="ZoomIn" size={11} /> Просмотр
                       </button>
@@ -374,7 +374,7 @@ export function IllustrationsSection({ reportId, secrecy, responsible, contracto
               <button
                 onClick={saveItem}
                 disabled={uploading}
-                className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 disabled:opacity-40 transition-colors"
+                className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover disabled:opacity-40 transition-colors"
               >
                 Сохранить
               </button>

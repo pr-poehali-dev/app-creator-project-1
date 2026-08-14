@@ -66,7 +66,7 @@ export function SaveBar({
       <button
         onClick={handleSave}
         disabled={saving}
-        className="bg-geo-amber text-primary-foreground px-5 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors disabled:opacity-60 flex items-center gap-2"
+        className="bg-geo-amber text-primary-foreground px-5 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors disabled:opacity-60 flex items-center gap-2"
       >
         {saving && <Icon name="Loader2" size={12} className="animate-spin" />}
         {saving ? "Сохранение…" : "Сохранить"}

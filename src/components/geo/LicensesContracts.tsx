@@ -106,7 +106,7 @@ export function LicensesSection({
             ]}
           />
           <div className="flex gap-3 pt-2">
-            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">Сохранить</button>
+            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">Сохранить</button>
             <button onClick={() => setModal(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
           </div>
         </Modal>
@@ -200,7 +200,7 @@ export function ContractsSection({
           <GeoInput label="Дата заключения" type="date" value={form.date} onChange={(v) => setForm((f) => ({ ...f, date: v }))} />
           <GeoInput label="Наименование контракта" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="Государственный контракт на..." />
           <div className="flex gap-3 pt-2">
-            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">Сохранить</button>
+            <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">Сохранить</button>
             <button onClick={() => setModal(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
           </div>
         </Modal>

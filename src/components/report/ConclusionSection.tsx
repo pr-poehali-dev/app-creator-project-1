@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import type { MainSection } from "./reportTypes";
 import { useReportBlock } from "@/lib/useReportBlock";
 import { SaveBar } from "./SaveBar";
+import { RecoveryBanner } from "./RecoveryBanner";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -249,6 +250,13 @@ export function ConclusionSection({ reportId }: { reportId: string }) {
         </div>
       )}
 
+      {conclusionBlock.recovery && (
+        <RecoveryBanner
+          savedAt={conclusionBlock.recovery.savedAt}
+          onRestore={conclusionBlock.restoreBackup}
+          onDismiss={conclusionBlock.dismissBackup}
+        />
+      )}
       <SaveBar id="conclusion" dirty={conclusionBlock.dirty} saving={conclusionBlock.saving} onSave={conclusionBlock.save} onRevert={conclusionBlock.revert} />
     </div>
   );

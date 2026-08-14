@@ -7,6 +7,7 @@ import { KitReferences } from "./KitReferences";
 import type { RefKind } from "@/lib/referencesApi";
 import { hasUnsaved, saveAllDrafts, revertAllDrafts } from "@/lib/draftRegistry";
 import { UnsavedChangesModal } from "@/components/report/UnsavedChangesModal";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 // ─── Комплект геологической информации ────────────────────────────────────────
 // Комплект: общие сведения (справочники из общей БД) + 4 элемента.
@@ -133,9 +134,12 @@ export default function KitPage({ report, customers, contractors, licenses, cont
               </span>
             </div>
           </div>
-          <span className="font-mono text-xs text-muted-foreground hidden sm:block border border-border px-2 py-0.5">
-            Комплект геологической информации
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-xs text-muted-foreground hidden sm:block border border-border px-2 py-0.5">
+              Комплект геологической информации
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

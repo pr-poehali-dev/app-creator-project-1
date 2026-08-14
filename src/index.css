@@ -45,10 +45,62 @@
 
     --geo-amber: 42 90% 55%;
     --geo-amber-dim: 42 60% 35%;
+    --geo-amber-hover: 43 96% 66%;
     --geo-green: 150 60% 40%;
     --geo-blue: 210 80% 55%;
     --geo-red: 0 70% 50%;
     --geo-grid: 220 15% 14%;
+    --geo-scanline: 220 20% 6%;
+  }
+
+  /* ─── Светлая тема: синие тона, тёмный шрифт ──────────────────────────── */
+  .theme-light {
+    --background: 210 40% 98%;
+    --foreground: 218 40% 16%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 218 40% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 40% 16%;
+
+    --primary: 214 84% 44%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 32% 93%;
+    --secondary-foreground: 218 35% 25%;
+
+    --muted: 214 32% 94%;
+    --muted-foreground: 215 20% 42%;
+
+    --accent: 214 84% 44%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 25% 84%;
+    --input: 214 25% 88%;
+    --ring: 214 84% 44%;
+
+    --sidebar-background: 210 40% 96%;
+    --sidebar-foreground: 218 35% 28%;
+    --sidebar-primary: 214 84% 44%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 32% 91%;
+    --sidebar-accent-foreground: 218 40% 16%;
+    --sidebar-border: 214 25% 84%;
+    --sidebar-ring: 214 84% 44%;
+
+    /* Акцент в светлой теме — насыщенный синий вместо янтарного */
+    --geo-amber: 214 84% 44%;
+    --geo-amber-dim: 214 40% 65%;
+    --geo-amber-hover: 214 84% 36%;
+    --geo-green: 150 62% 32%;
+    --geo-blue: 210 80% 45%;
+    --geo-red: 0 72% 46%;
+    --geo-grid: 214 30% 88%;
+    --geo-scanline: 214 30% 70%;
   }
 }
 
@@ -89,8 +141,8 @@
       0deg,
       transparent,
       transparent 2px,
-      hsl(220 20% 6% / 0.15) 2px,
-      hsl(220 20% 6% / 0.15) 4px
+      hsl(var(--geo-scanline) / 0.15) 2px,
+      hsl(var(--geo-scanline) / 0.15) 4px
     );
   }
 

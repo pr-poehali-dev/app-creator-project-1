@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchBlock, saveBlock, type BlockName } from "./referencesApi";
+import { backupDraft, clearDraftBackup, readDraftBackup } from "./draftBackup";
 
 // Хук хранения блока отчёта в общей БД.
 // Если в БД блока ещё нет — переносит данные из localStorage (legacyKey).
@@ -22,6 +23,8 @@ export function useReportBlock<T>(
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  // Найденная копия несохранённых правок (предлагаем восстановить)
+  const [recovery, setRecovery] = useState<{ data: T; savedAt: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ready = useRef(false);
   // Последнее сохранённое состояние — для «Отменить» и сравнения
@@ -84,6 +87,15 @@ export function useReportBlock<T>(
         }
       } finally {
         if (alive) {
+          // Осталась копия несохранённых правок от прошлой сессии?
+          if (manual) {
+            const backup = readDraftBackup<T>(block, reportId);
+            if (backup && JSON.stringify(backup.data) !== JSON.stringify(savedRef.current)) {
+              setRecovery({ data: backup.data, savedAt: backup.savedAt });
+            } else if (backup) {
+              clearDraftBackup(block, reportId);
+            }
+          }
           setLoading(false);
           ready.current = true;
         }
@@ -126,7 +138,11 @@ export function useReportBlock<T>(
       if (ready.current) {
         if (manual) {
           // Правки копятся в черновике — записываем только по кнопке «Сохранить»
-          setDirty(JSON.stringify(next) !== JSON.stringify(savedRef.current));
+          const isDirty = JSON.stringify(next) !== JSON.stringify(savedRef.current);
+          setDirty(isDirty);
+          // Страховка в браузере на случай внезапного закрытия вкладки
+          if (isDirty) backupDraft(block, reportId, next);
+          else clearDraftBackup(block, reportId);
         } else {
           if (timer.current) clearTimeout(timer.current);
           setSaving(true);
@@ -155,6 +171,8 @@ export function useReportBlock<T>(
       await saveBlock(block, reportId, next);
       savedRef.current = next;
       setDirty(false);
+      // Данные в базе — страховочная копия больше не нужна
+      clearDraftBackup(block, reportId);
       return true;
     } catch {
       return false;
@@ -167,7 +185,23 @@ export function useReportBlock<T>(
   const revert = useCallback(() => {
     setValueState(savedRef.current);
     setDirty(false);
-  }, []);
+    clearDraftBackup(block, reportId);
+  }, [block, reportId]);
 
-  return { value, setValue, loading, saving, reload, dirty, save, revert };
+  const restoreBackup = useCallback(() => {
+    if (!recovery) return;
+    setValueState(recovery.data);
+    setDirty(JSON.stringify(recovery.data) !== JSON.stringify(savedRef.current));
+    setRecovery(null);
+  }, [recovery]);
+
+  const dismissBackup = useCallback(() => {
+    clearDraftBackup(block, reportId);
+    setRecovery(null);
+  }, [block, reportId]);
+
+  return {
+    value, setValue, loading, saving, reload, dirty, save, revert,
+    recovery, restoreBackup, dismissBackup,
+  };
 }

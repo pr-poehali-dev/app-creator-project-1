@@ -172,7 +172,7 @@ export function PdfOpenButton({ url, filename, mime, label = "Просмотр",
   return (
     <button
       onClick={() => onPreview(url, filename, mime)}
-      className={className ?? "inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors"}
+      className={className ?? "inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-geo-amber-hover transition-colors"}
     >
       <Icon name={isImage(url, mime) ? "ZoomIn" : "Eye"} size={12} /> {label}
     </button>

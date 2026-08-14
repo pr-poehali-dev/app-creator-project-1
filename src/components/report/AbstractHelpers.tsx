@@ -74,7 +74,7 @@ export function MethodsTable({ methods, onChange }: {
           <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Методы и объёмы работ</span>
           <span className="ml-2 text-xs text-muted-foreground/40 font-mono">способы исследования</span>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 border border-geo-amber/40 hover:border-amber-400/60 px-3 py-1.5 transition-colors">
+        <button onClick={openAdd} className="flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-geo-amber-hover border border-geo-amber/40 hover:border-geo-amber-hover/60 px-3 py-1.5 transition-colors">
           <Icon name="Plus" size={12} /> Добавить метод
         </button>
       </div>
@@ -176,7 +176,7 @@ export function MethodsTable({ methods, onChange }: {
               </div>
             </div>
             <div className="flex gap-3 pt-1">
-              <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">Сохранить</button>
+              <button onClick={save} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">Сохранить</button>
               <button onClick={() => setEditId(null)} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>
             </div>
           </div>

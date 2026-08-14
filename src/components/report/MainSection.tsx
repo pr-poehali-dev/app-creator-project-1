@@ -6,6 +6,7 @@ import { newId, buildBlockNumbers } from "./MainSectionHelpers";
 import { SectionCard } from "./MainSectionCard";
 import { useReportBlock } from "@/lib/useReportBlock";
 import { SaveBar } from "./SaveBar";
+import { RecoveryBanner } from "./RecoveryBanner";
 
 // ─── MainTextSection ──────────────────────────────────────────────────────────
 
@@ -118,6 +119,13 @@ export function MainTextSection({ reportId }: { reportId: string }) {
         </div>
       )}
 
+      {mainBlock.recovery && (
+        <RecoveryBanner
+          savedAt={mainBlock.recovery.savedAt}
+          onRestore={mainBlock.restoreBackup}
+          onDismiss={mainBlock.dismissBackup}
+        />
+      )}
       <SaveBar id="main_text" dirty={mainBlock.dirty} saving={mainBlock.saving} onSave={saveWithSync} onRevert={mainBlock.revert} />
     </div>
   );

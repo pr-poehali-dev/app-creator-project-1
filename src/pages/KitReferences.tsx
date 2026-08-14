@@ -249,7 +249,7 @@ function RefEditModal({ state, customers, contractors, licenses, contracts, onCl
         </>
       )}
       <div className="flex gap-3 pt-2">
-        <button onClick={submit} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-amber-400 transition-colors">
+        <button onClick={submit} className="flex-1 bg-geo-amber text-primary-foreground py-2 text-sm font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors">
           Сохранить в базу
         </button>
         <button onClick={onClose} className="px-4 border border-border text-muted-foreground text-sm hover:text-foreground transition-colors">Отмена</button>

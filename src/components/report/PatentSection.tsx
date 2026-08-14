@@ -117,7 +117,7 @@ export function PatentSection({ reportId, secrecy, responsible, contractor, cont
                 Загружен {new Date(file.uploadedAt).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" })}
               </p>
               <button onClick={() => openPreview(file.url, file.filename)}
-                className="inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-amber-400 transition-colors mt-2">
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-geo-amber hover:text-geo-amber-hover transition-colors mt-2">
                 <Icon name="Eye" size={12} /> Просмотр
               </button>
             </div>

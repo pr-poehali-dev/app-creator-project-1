@@ -6,6 +6,7 @@ import Icon from "@/components/ui/icon";
 import type { WorkMethod } from "./reportTypes";
 import { useReportBlock } from "@/lib/useReportBlock";
 import { SaveBar } from "./SaveBar";
+import { RecoveryBanner } from "./RecoveryBanner";
 
 // ─── Изученность: топооснова (Leaflet + OSM) с нанесением координат ─────────────
 // Точки привязываются к методам («виды и объёмы работ») из реферата отчёта.
@@ -130,7 +131,7 @@ export function StudySection({ reportId }: { reportId: string }) {
           <span className="font-mono text-xs text-muted-foreground/70 uppercase tracking-widest">Долгота</span>
           <input value={lon} onChange={(e) => setLon(e.target.value)} placeholder="65.500" className="w-28 bg-background border border-border px-2 py-1.5 text-sm text-foreground focus:border-geo-amber outline-none font-mono" />
         </label>
-        <button onClick={addManual} className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors h-[34px]">
+        <button onClick={addManual} className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-3 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors h-[34px]">
           <Icon name="Plus" size={13} />
           Добавить
         </button>
@@ -232,6 +233,13 @@ export function StudySection({ reportId }: { reportId: string }) {
         )}
       </div>
 
+      {studyBlock.recovery && (
+        <RecoveryBanner
+          savedAt={studyBlock.recovery.savedAt}
+          onRestore={studyBlock.restoreBackup}
+          onDismiss={studyBlock.dismissBackup}
+        />
+      )}
       <SaveBar id="study" dirty={studyBlock.dirty} saving={studyBlock.saving} onSave={studyBlock.save} onRevert={studyBlock.revert} />
     </div>
   );

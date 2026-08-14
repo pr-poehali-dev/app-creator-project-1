@@ -121,7 +121,7 @@ export function PassportSection({ report, customer, contractor, license }: Passp
             <button
               onClick={handleSave}
               disabled={saving || !dirty}
-              className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors disabled:opacity-40 h-[38px]"
+              className="flex items-center gap-1.5 bg-geo-amber text-primary-foreground px-4 py-2 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors disabled:opacity-40 h-[38px]"
             >
               <Icon name={saving ? "Loader2" : "Save"} size={14} className={saving ? "animate-spin" : ""} />
               Сохранить

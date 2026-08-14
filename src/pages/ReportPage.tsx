@@ -8,6 +8,7 @@ import { useReportBlock } from "@/lib/useReportBlock";
 import { hasUnsaved, saveAllDrafts, revertAllDrafts } from "@/lib/draftRegistry";
 import { useDirtyTabs } from "@/lib/useDirtyTabs";
 import { UnsavedChangesModal } from "@/components/report/UnsavedChangesModal";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SaveBar } from "@/components/report/SaveBar";
 import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } from "@/components/report/ReportSections1";
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
@@ -188,10 +189,11 @@ export default function ReportPage({ report, customers, contractors, licenses, c
             <span className="font-mono text-xs text-muted-foreground hidden sm:block border border-border px-2 py-0.5">
               ГОСТ Р 53579–2009
             </span>
+            <ThemeToggle />
             <button
               onClick={handleExportPdf}
               disabled={pdfExporting}
-              className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-amber-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-geo-amber text-primary-foreground px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-geo-amber-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Icon name={pdfExporting ? "Loader2" : "FileDown"} size={13} className={pdfExporting ? "animate-spin" : ""} />
               {pdfExporting ? "Генерация..." : "Экспорт PDF"}
