@@ -1,9 +1,9 @@
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
-import type { LabelData, TitlePageData, AbstractData, IntroBlock, MainSection, ReferenceEntry, TermEntry, TableEntry, TextAppendix, GraphicAppendix } from "./reportTypes";
+import type { LabelData, TitlePageData, AbstractData, IntroBlock, MainSection, ReferenceEntry, TermEntry, TableEntry, TextAppendix, GraphicAppendix, Illustration } from "./reportTypes";
 import { DEFAULT_LABEL, DEFAULT_TITLE_PAGE, DEFAULT_ABSTRACT } from "./reportTypes";
 import { buildContentsAsync } from "./ContentsSection";
 import { fetchBlock, type BlockName } from "@/lib/referencesApi";
-import type { PdfData } from "./ReportPdfView";
+import type { PdfData, PdfFileRef, PdfLabeledFile, PdfMetroData } from "./PdfPrimitives";
 
 // Данные для PDF берём из общей БД, при недоступности — из браузера
 async function loadJson<T>(block: BlockName, id: string, legacyKey: string, fallback: T): Promise<T> {
@@ -50,6 +50,20 @@ export async function collectPdfData(
     loadJson<IntroBlock[]>("conclusion", id, "geo_conclusion", []),
   ]);
 
+  // Разделы-вложения: в PDF попадает опись приложенных документов
+  const [
+    taskFile, illustrations, metrological, patent, protocol, cost, reviews, transferActs,
+  ] = await Promise.all([
+    loadJson<PdfFileRef | null>("task_file", id, "geo_task_file", null),
+    loadJson<Illustration[]>("illustrations", id, "geo_illustrations", []),
+    loadJson<PdfMetroData>("metrological", id, "geo_metrological", {}),
+    loadJson<PdfFileRef | null>("patent", id, "geo_patent", null),
+    loadJson<PdfFileRef | null>("protocol", id, "geo_protocol", null),
+    loadJson<PdfFileRef | null>("cost", id, "geo_cost", null),
+    loadJson<PdfLabeledFile[]>("review", id, "geo_review", []),
+    loadJson<PdfLabeledFile[]>("transfer_acts", id, "geo_transfer_acts", []),
+  ]);
+
   const contentsPages = await loadJson<Record<string, string>>(
     "contents_pages", id, "geo_contents_pages", {},
   );
@@ -63,6 +77,7 @@ export async function collectPdfData(
     textAppendices, graphicAppendices,
     introBlocks, mainSections, conclusionBlocks,
     contentsPages,
+    taskFile, illustrations, metrological, patent, protocol, cost, reviews, transferActs,
   };
 }
 

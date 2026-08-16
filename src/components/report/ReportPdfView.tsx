@@ -2,6 +2,10 @@ import type { PdfData } from "./PdfPrimitives";
 import { PdfLabel, PdfTitlePage, PdfAbstract, PdfContents } from "./PdfFrontPages";
 import { PdfTextPart } from "./PdfTextPartPage";
 import { PdfTables, PdfTextAppendices, PdfGraphicAppendices, PdfTerms, PdfReferences } from "./PdfAppendixPages";
+import {
+  PdfExecutors, PdfIllustrations, PdfMetrological, PdfTaskCopy,
+  PdfPatent, PdfProtocol, PdfCost, PdfReviews, PdfTransferActs,
+} from "./PdfExtraPages";
 
 export type { PdfData };
 
@@ -18,16 +22,27 @@ export function ReportPdfView({ data }: { data: PdfData }) {
       margin: "0 auto",
       padding: "0",
     }}>
+      {/* Порядок разделов — по ГОСТ Р 53579–2009.
+          Разделы без данных не выводятся: компоненты сами возвращают null. */}
       <PdfLabel d={data} />
       <PdfTitlePage d={data} />
+      <PdfExecutors d={data} />
       <PdfAbstract d={data} />
+      <PdfTaskCopy d={data} />
       <PdfContents d={data} />
+      <PdfIllustrations d={data} />
       {(data.tables.length > 0) && <PdfTables d={data} />}
       {(data.textAppendices.length > 0) && <PdfTextAppendices d={data} />}
       {(data.graphicAppendices.length > 0) && <PdfGraphicAppendices d={data} />}
       {(data.terms.length > 0) && <PdfTerms d={data} />}
       <PdfTextPart d={data} />
       {(data.references.length > 0) && <PdfReferences d={data} />}
+      <PdfMetrological d={data} />
+      <PdfPatent d={data} />
+      <PdfReviews d={data} />
+      <PdfProtocol d={data} />
+      <PdfCost d={data} />
+      <PdfTransferActs d={data} />
     </div>
   );
 }

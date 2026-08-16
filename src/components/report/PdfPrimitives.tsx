@@ -3,7 +3,7 @@ import type {
   LabelData, TitlePageData, AbstractData,
   ContentsEntry, ReferenceEntry, TermEntry,
   TableEntry, TextAppendix, GraphicAppendix,
-  IntroBlock, MainSection,
+  IntroBlock, MainSection, Illustration,
 } from "./reportTypes";
 
 // ─── Общий тип PdfData ────────────────────────────────────────────────────────
@@ -27,6 +27,33 @@ export interface PdfData {
   mainSections: MainSection[];
   conclusionBlocks: IntroBlock[];
   contentsPages?: Record<string, string>;
+
+  // Разделы-вложения: в PDF выводим опись приложенных документов
+  taskFile?: PdfFileRef | null;
+  illustrations?: Illustration[];
+  metrological?: PdfMetroData;
+  patent?: PdfFileRef | null;
+  protocol?: PdfFileRef | null;
+  cost?: PdfFileRef | null;
+  reviews?: PdfLabeledFile[];
+  transferActs?: PdfLabeledFile[];
+}
+
+export interface PdfFileRef {
+  url?: string;
+  filename?: string;
+  uploadedAt?: string;
+}
+
+export interface PdfLabeledFile extends PdfFileRef {
+  id: string;
+  label?: string;
+}
+
+export interface PdfMetroData {
+  type?: "conclusion" | "certificate";
+  conclusions?: { id: string; label?: string; file?: PdfFileRef }[];
+  certificateFile?: PdfFileRef;
 }
 
 // ─── Примитивные компоненты ───────────────────────────────────────────────────
