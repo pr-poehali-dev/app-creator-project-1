@@ -10,6 +10,7 @@ import { useDirtyTabs } from "@/lib/useDirtyTabs";
 import { UnsavedChangesModal } from "@/components/report/UnsavedChangesModal";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SaveBar } from "@/components/report/SaveBar";
+import { RecoveryBanner } from "@/components/report/RecoveryBanner";
 import { LabelSection, TitlePageSection, ExecutorsSection, PlaceholderTable } from "@/components/report/ReportSections1";
 import { AbstractSection, TaskCopySection, ContentsSection } from "@/components/report/ReportSections2";
 import { IllustrationsSection } from "@/components/report/IllustrationsSection";
@@ -358,6 +359,29 @@ export default function ReportPage({ report, customers, contractors, licenses, c
                 />
               ) : (
                 <PlaceholderTable tab={activeTabDef} />
+              )}
+
+              {/* Несохранённые правки прошлой сессии — предлагаем восстановить */}
+              {activeTab === "label" && labelBlock.recovery && (
+                <RecoveryBanner
+                  savedAt={labelBlock.recovery.savedAt}
+                  onRestore={labelBlock.restoreBackup}
+                  onDismiss={labelBlock.dismissBackup}
+                />
+              )}
+              {activeTab === "title_page" && titleBlock.recovery && (
+                <RecoveryBanner
+                  savedAt={titleBlock.recovery.savedAt}
+                  onRestore={titleBlock.restoreBackup}
+                  onDismiss={titleBlock.dismissBackup}
+                />
+              )}
+              {activeTab === "abstract" && abstractBlock.recovery && (
+                <RecoveryBanner
+                  savedAt={abstractBlock.recovery.savedAt}
+                  onRestore={abstractBlock.restoreBackup}
+                  onDismiss={abstractBlock.dismissBackup}
+                />
               )}
 
               {/* Сохранение раздела: правки уходят в базу только по кнопке */}
