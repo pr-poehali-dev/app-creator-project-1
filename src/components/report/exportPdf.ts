@@ -92,30 +92,39 @@ export async function exportToPdf(data: PdfData): Promise<void> {
   // Небольшая пауза чтобы React успел отрендерить
   await new Promise((r) => setTimeout(r, 400));
 
-  const filename = `${data.report.title || "отчёт"}_${data.report.year || ""}.pdf`
+  // Обрезаем название, а не имя целиком — иначе у длинных заголовков
+  // отсекается расширение и файл сохраняется без .pdf
+  const base = `${data.report.title || "отчёт"}_${data.report.year || ""}`
     .replace(/[^\wА-яЁё\s\-.]/gi, "")
     .replace(/\s+/g, "_")
-    .slice(0, 120);
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 110);
+  const filename = `${base || "отчёт"}.pdf`;
 
   const opt = {
-    margin: [15, 15, 15, 20], // top, right, bottom, left (мм)
+    margin: [15, 15, 15, 20] as [number, number, number, number], // top, right, bottom, left (мм)
     filename,
-    image: { type: "jpeg", quality: 0.95 },
+    image: { type: "jpeg" as const, quality: 0.95 },
     html2canvas: {
       scale: 2,
       useCORS: true,
       logging: false,
     },
     jsPDF: {
-      unit: "mm",
+      unit: "mm" as const,
       format: "a4",
-      orientation: "portrait",
+      orientation: "portrait" as const,
     },
     pagebreak: { mode: ["avoid-all", "css", "legacy"], before: ".pdf-page" },
   };
 
-  await html2pdf().set(opt).from(container).save();
-
-  root.unmount();
-  document.body.removeChild(container);
+  try {
+    await html2pdf().set(opt).from(container).save();
+  } finally {
+    // Убираем временный блок в любом случае: иначе после сбоя он остаётся
+    // висеть в странице и тянет память при повторных попытках
+    root.unmount();
+    container.remove();
+  }
 }

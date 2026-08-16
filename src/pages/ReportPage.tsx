@@ -44,6 +44,7 @@ interface ReportPageProps {
 export default function ReportPage({ report, customers, contractors, licenses, contracts, onBack, onUpdateReport }: ReportPageProps) {
   const [activeTabState, setActiveTabState] = useState<TabId>("label");
   const [pdfExporting, setPdfExporting] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   // Отложенный переход: ждём решения пользователя по несохранённым правкам
   const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
   const activeTab = activeTabState;
@@ -88,9 +89,21 @@ export default function ReportPage({ report, customers, contractors, licenses, c
 
   const handleExportPdf = async () => {
     setPdfExporting(true);
+    setPdfError(null);
     try {
+      // PDF собирается из базы, поэтому несохранённые правки сначала записываем —
+      // иначе в документ попадёт устаревшая версия разделов
+      if (hasUnsaved()) {
+        const ok = await saveAllDrafts();
+        if (!ok) {
+          setPdfError("Не удалось сохранить правки. Экспорт отменён, данные не потеряны.");
+          return;
+        }
+      }
       const data = await collectPdfData(report, customers, contractors, licenses, contracts);
       await exportToPdf(data);
+    } catch {
+      setPdfError("Не удалось сформировать PDF. Попробуйте ещё раз.");
     } finally {
       setPdfExporting(false);
     }
@@ -200,6 +213,14 @@ export default function ReportPage({ report, customers, contractors, licenses, c
               {pdfExporting ? "Генерация..." : "Экспорт PDF"}
             </button>
           </div>
+          {pdfError && (
+            <div className="px-4 pb-2">
+              <p className="text-xs text-destructive flex items-center gap-1.5">
+                <Icon name="TriangleAlert" size={12} />
+                {pdfError}
+              </p>
+            </div>
+          )}
         </div>
       </header>
 
