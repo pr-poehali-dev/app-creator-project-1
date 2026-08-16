@@ -3,7 +3,9 @@ import Icon from "@/components/ui/icon";
 import type { ReportData, Customer, Contractor, License, Contract } from "@/types/geo";
 import { TABS, DEFAULT_LABEL, DEFAULT_TITLE_PAGE, DEFAULT_ABSTRACT } from "@/components/report/reportTypes";
 import type { TabId, LabelData, TitlePageData, AbstractData } from "@/components/report/reportTypes";
-import { collectPdfData, exportToPdf } from "@/components/report/exportPdf";
+import { collectPdfData, exportToPdf, renderPdfBlob, pdfFileName } from "@/components/report/exportPdf";
+import { collectAttachments } from "@/components/report/collectAttachments";
+import { mergeReportPdf, type MergeResult } from "@/components/report/mergePdfApi";
 import { useReportBlock } from "@/lib/useReportBlock";
 import { hasUnsaved, saveAllDrafts, revertAllDrafts } from "@/lib/draftRegistry";
 import { useDirtyTabs } from "@/lib/useDirtyTabs";
@@ -45,6 +47,8 @@ export default function ReportPage({ report, customers, contractors, licenses, c
   const [activeTabState, setActiveTabState] = useState<TabId>("label");
   const [pdfExporting, setPdfExporting] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [kitBuilding, setKitBuilding] = useState(false);
+  const [kitResult, setKitResult] = useState<MergeResult | null>(null);
   // Отложенный переход: ждём решения пользователя по несохранённым правкам
   const [pendingNav, setPendingNav] = useState<null | (() => void)>(null);
   const activeTab = activeTabState;
@@ -106,6 +110,32 @@ export default function ReportPage({ report, customers, contractors, licenses, c
       setPdfError("Не удалось сформировать PDF. Попробуйте ещё раз.");
     } finally {
       setPdfExporting(false);
+    }
+  };
+
+  // Печатный комплект: отчёт + все приложения (ТЗ, карты, схемы, заключения)
+  // подшиваются в один файл на сервере
+  const handleBuildPrintKit = async () => {
+    setKitBuilding(true);
+    setPdfError(null);
+    setKitResult(null);
+    try {
+      if (hasUnsaved()) {
+        const ok = await saveAllDrafts();
+        if (!ok) {
+          setPdfError("Не удалось сохранить правки. Сборка отменена, данные не потеряны.");
+          return;
+        }
+      }
+      const data = await collectPdfData(report, customers, contractors, licenses, contracts);
+      const attachments = collectAttachments(data);
+      const blob = await renderPdfBlob(data);
+      const result = await mergeReportPdf(blob, attachments, pdfFileName(data));
+      setKitResult(result);
+    } catch (e) {
+      setPdfError(e instanceof Error ? e.message : "Не удалось собрать комплект.");
+    } finally {
+      setKitBuilding(false);
     }
   };
 
@@ -212,7 +242,41 @@ export default function ReportPage({ report, customers, contractors, licenses, c
               <Icon name={pdfExporting ? "Loader2" : "FileDown"} size={13} className={pdfExporting ? "animate-spin" : ""} />
               {pdfExporting ? "Генерация..." : "Экспорт PDF"}
             </button>
+            <button
+              onClick={handleBuildPrintKit}
+              disabled={kitBuilding || pdfExporting}
+              title="Отчёт и все приложения — ТЗ, карты, схемы, заключения — одним файлом для печати"
+              className="flex items-center gap-2 border border-geo-amber text-geo-amber px-3 py-1.5 text-xs font-display tracking-wider uppercase hover:bg-geo-amber hover:text-primary-foreground transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Icon name={kitBuilding ? "Loader2" : "Printer"} size={13} className={kitBuilding ? "animate-spin" : ""} />
+              {kitBuilding ? "Сборка..." : "Комплект к печати"}
+            </button>
           </div>
+          {kitResult && (
+            <div className="px-4 pb-2 flex flex-wrap items-center gap-3">
+              <p className="text-xs text-geo-green flex items-center gap-1.5">
+                <Icon name="CircleCheck" size={12} />
+                Комплект собран: {kitResult.pages} стр., приложений подшито {Math.max(0, kitResult.merged - 1)}
+              </p>
+              <a
+                href={kitResult.url}
+                target="_blank"
+                rel="noreferrer"
+                download={kitResult.filename}
+                className="text-xs font-display tracking-wider uppercase bg-geo-amber text-primary-foreground px-3 py-1 hover:bg-geo-amber-hover transition-colors"
+              >
+                Скачать
+              </a>
+              {kitResult.skipped.length > 0 && (
+                <span className="text-xs text-destructive">
+                  Не удалось подшить: {kitResult.skipped.map((s) => s.title).join(", ")}
+                </span>
+              )}
+              <button onClick={() => setKitResult(null)} className="text-xs text-muted-foreground hover:text-foreground">
+                Скрыть
+              </button>
+            </div>
+          )}
           {pdfError && (
             <div className="px-4 pb-2">
               <p className="text-xs text-destructive flex items-center gap-1.5">

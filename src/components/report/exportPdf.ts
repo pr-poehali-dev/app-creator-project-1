@@ -81,7 +81,23 @@ export async function collectPdfData(
   };
 }
 
-export async function exportToPdf(data: PdfData): Promise<void> {
+export function pdfFileName(data: PdfData): string {
+  // Обрезаем название, а не имя целиком — иначе у длинных заголовков
+  // отсекается расширение и файл сохраняется без .pdf
+  const base = `${data.report.title || "отчёт"}_${data.report.year || ""}`
+    .replace(/[^\wА-яЁё\s\-.]/gi, "")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 110);
+  return `${base || "отчёт"}.pdf`;
+}
+
+/**
+ * Рендерит отчёт и отдаёт готовый PDF.
+ * mode "save" — сразу сохраняет файл, "blob" — возвращает данные для склейки.
+ */
+async function renderPdf(data: PdfData, mode: "save" | "blob"): Promise<Blob | void> {
   const html2pdf = (await import("html2pdf.js")).default;
 
   // Создаём временный div вне DOM
@@ -107,15 +123,7 @@ export async function exportToPdf(data: PdfData): Promise<void> {
   // Небольшая пауза чтобы React успел отрендерить
   await new Promise((r) => setTimeout(r, 400));
 
-  // Обрезаем название, а не имя целиком — иначе у длинных заголовков
-  // отсекается расширение и файл сохраняется без .pdf
-  const base = `${data.report.title || "отчёт"}_${data.report.year || ""}`
-    .replace(/[^\wА-яЁё\s\-.]/gi, "")
-    .replace(/\s+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "")
-    .slice(0, 110);
-  const filename = `${base || "отчёт"}.pdf`;
+  const filename = pdfFileName(data);
 
   const opt = {
     margin: [15, 15, 15, 20] as [number, number, number, number], // top, right, bottom, left (мм)
@@ -135,11 +143,20 @@ export async function exportToPdf(data: PdfData): Promise<void> {
   };
 
   try {
-    await html2pdf().set(opt).from(container).save();
+    const worker = html2pdf().set(opt).from(container);
+    if (mode === "blob") return await worker.outputPdf("blob") as Blob;
+    await worker.save();
   } finally {
     // Убираем временный блок в любом случае: иначе после сбоя он остаётся
     // висеть в странице и тянет память при повторных попытках
     root.unmount();
     container.remove();
   }
+}
+export async function exportToPdf(data: PdfData): Promise<void> {
+  await renderPdf(data, "save");
+}
+
+export async function renderPdfBlob(data: PdfData): Promise<Blob> {
+  return await renderPdf(data, "blob") as Blob;
 }
